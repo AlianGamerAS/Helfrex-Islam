@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="2.2"
+        android:scaleY="2.2"
+        android:translateX="27.6"
+        android:translateY="27.6">
+        <!-- Gold Crescent -->
+        <path
+            android:fillColor="#E2B755"
+            android:pathData="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 20.35,16.5A7.5,7.5 0 0,1 11.5,7.65A10.03,10.03 0 0,0 12,2Z" />
+        <!-- Mosque Dome & Minaret Silhouette -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M11,11C11,9.5 12,8 13,8C14,8 15,9.5 15,11L15,18L11,18Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M8,13L10,13L10,18L8,18Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M16,13L18,13L18,18L16,18Z" />
+        <!-- Star -->
+        <path
+            android:fillColor="#FFD574"
+            android:pathData="M16,6.5L16.6,7.8L18,8L17,9L17.2,10.4L16,9.7L14.8,10.4L15,9L14,8L15.4,7.8Z" />
+    </group>
+</vector>

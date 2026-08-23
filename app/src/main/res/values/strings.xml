@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Helfrex İslam</string>
+    <string name="nav_home">Ana Menü</string>
+    <string name="nav_library">Kütüphane</string>
+    <string name="nav_settings">Ayarlar</string>
+</resources>

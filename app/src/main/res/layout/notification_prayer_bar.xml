@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/notif_root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_notif_panel_dark"
+    android:padding="8dp">
+
+    <!-- Top info bar with city/title and countdown -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="6dp"
+        android:paddingHorizontal="4dp">
+
+        <TextView
+            android:id="@+id/notif_title_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Helfrex İslam"
+            android:textColor="#94A3B8"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:singleLine="true"
+            android:ellipsize="end" />
+
+        <LinearLayout
+            android:id="@+id/notif_countdown_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_countdown_pill_dark"
+            android:gravity="center"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="3dp">
+
+            <TextView
+                android:id="@+id/notif_countdown_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="--:--:--"
+                android:textColor="#00F2FF"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Inner Rectangle Strip for Prayer Time Boxes -->
+    <LinearLayout
+        android:id="@+id/notif_inner_strip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_notif_inner_dark"
+        android:orientation="horizontal"
+        android:padding="4dp"
+        android:gravity="center">
+
+        <!-- 1. İmsak -->
+        <LinearLayout
+            android:id="@+id/notif_box_imsak"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="2dp"
+            android:background="@drawable/bg_prayer_box_inactive_dark"
+            android:orientation="vertical"
+            android:paddingVertical="4dp"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/notif_name_imsak"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="İmsak"
+                android:textColor="#94A3B8"
+                android:textSize="9sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/notif_time_imsak"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="05:30"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- 2. Sabah -->
+        <LinearLayout
+            android:id="@+id/notif_box_sabah"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="2dp"
+            android:background="@drawable/bg_prayer_box_inactive_dark"
+            android:orientation="vertical"
+            android:paddingVertical="4dp"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/notif_name_sabah"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sabah"
+                android:textColor="#94A3B8"
+                android:textSize="9sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/notif_time_sabah"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="06:00"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- 3. Güneş -->
+        <LinearLayout
+            android:id="@+id/notif_box_gunes"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="2dp"
+            android:background="@drawable/bg_prayer_box_inactive_dark"
+            android:orientation="vertical"
+            android:paddingVertical="4dp"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/notif_name_gunes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Güneş"
+                android:textColor="#94A3B8"
+                android:textSize="9sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/notif_time_gunes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="07:00"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- 3. Öğle -->
+        <LinearLayout
+            android:id="@+id/notif_box_ogle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="2dp"
+            android:background="@drawable/bg_prayer_box_inactive_dark"
+            android:orientation="vertical"
+            android:paddingVertical="4dp"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/notif_name_ogle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Öğle"
+                android:textColor="#94A3B8"
+                android:textSize="9sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/notif_time_ogle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="13:15"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- 4. İkindi -->
+        <LinearLayout
+            android:id="@+id/notif_box_ikindi"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="2dp"
+            android:background="@drawable/bg_prayer_box_inactive_dark"
+            android:orientation="vertical"
+            android:paddingVertical="4dp"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/notif_name_ikindi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="İkindi"
+                android:textColor="#94A3B8"
+                android:textSize="9sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/notif_time_ikindi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="16:30"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- 5. Akşam -->
+        <LinearLayout
+            android:id="@+id/notif_box_aksam"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="2dp"
+            android:background="@drawable/bg_prayer_box_inactive_dark"
+            android:orientation="vertical"
+            android:paddingVertical="4dp"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/notif_name_aksam"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Akşam"
+                android:textColor="#94A3B8"
+                android:textSize="9sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/notif_time_aksam"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="19:10"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- 6. Yatsı -->
+        <LinearLayout
+            android:id="@+id/notif_box_yatsi"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="2dp"
+            android:background="@drawable/bg_prayer_box_inactive_dark"
+            android:orientation="vertical"
+            android:paddingVertical="4dp"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/notif_name_yatsi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Yatsı"
+                android:textColor="#94A3B8"
+                android:textSize="9sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/notif_time_yatsi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="20:45"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

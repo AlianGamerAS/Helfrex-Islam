@@ -11,13 +11,14 @@ import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.MainActivity
 import com.example.R
-import com.example.data.FileDownloader
 import com.example.data.PreferencesManager
 import com.example.model.AppLanguage
 import com.example.model.AzanDuration
@@ -34,6 +35,8 @@ class AzanPlayerService : Service() {
     private var mediaPlayer: MediaPlayer? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private var autoStopJob: Job? = null
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var stopRunnable: Runnable? = null
     private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -76,7 +79,7 @@ class AzanPlayerService : Service() {
                     "HelfrexIslam:AzanWakeLock"
                 ).apply {
                     setReferenceCounted(false)
-                    acquire(15 * 60 * 1000L) // 15 minutes max safeguard
+                    acquire(5 * 60 * 1000L) // 5 minutes max safeguard
                 }
             }
         } catch (e: Exception) {
@@ -102,13 +105,8 @@ class AzanPlayerService : Service() {
 
         when (sound) {
             AzanSound.SILENT -> {
-                Log.d(TAG, "Silent mode selected. No audio played.")
-                // Auto dismiss notification after 20 seconds
-                autoStopJob = serviceScope.launch {
-                    delay(20000L)
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-                    stopSelf()
-                }
+                Log.d(TAG, "Silent mode selected. Notification only.")
+                scheduleSelfStop(15000L)
             }
 
             AzanSound.RINGTONE -> {
@@ -124,15 +122,15 @@ class AzanPlayerService : Service() {
                 )
 
                 if (mp != null) {
-                    setupRingtonePlayerAndLoop(mp, targetLoops)
+                    setupRingtonePlayer(mp, targetLoops)
                 } else {
                     Log.e(TAG, "Could not initialize ringtone player.")
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-                    stopSelf()
+                    scheduleSelfStop(5000L)
                 }
             }
 
             AzanSound.AZAN -> {
+                val isShort = (duration == AzanDuration.SHORT)
                 val rawResId = R.raw.ezan1
 
                 val mp = com.example.util.SoundPlayerHelper.createMediaPlayer(
@@ -144,19 +142,20 @@ class AzanPlayerService : Service() {
                 )
 
                 if (mp != null) {
-                    setupAzanPlayer(mp, duration == AzanDuration.SHORT)
+                    setupAzanPlayer(mp, isShort)
                 } else {
                     Log.e(TAG, "Could not initialize azan player.")
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-                    stopSelf()
+                    scheduleSelfStop(5000L)
                 }
             }
         }
     }
 
-    private fun setupAzanPlayer(mp: MediaPlayer, isShort11Seconds: Boolean) {
+    private fun setupAzanPlayer(mp: MediaPlayer, isShort: Boolean) {
         try {
             mediaPlayer = mp
+            mp.isLooping = false
+            
             try {
                 val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
                 val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
@@ -168,17 +167,18 @@ class AzanPlayerService : Service() {
             mp.setVolume(1.0f, 1.0f)
             mp.start()
 
-            if (isShort11Seconds) {
-                Log.d(TAG, "Azan Short mode: playing 11 seconds then stopping.")
-                autoStopJob = serviceScope.launch {
-                    delay(11000L)
-                    Log.d(TAG, "11 seconds elapsed for Short Azan. Stopping.")
+            if (isShort) {
+                Log.d(TAG, "Azan Short mode: playing real azan for exactly 11 seconds.")
+                scheduleSelfStop(11000L)
+                mp.setOnCompletionListener {
+                    Log.d(TAG, "Short azan audio finished before timeout.")
                     stopPlaybackInternal()
                     stopForeground(STOP_FOREGROUND_REMOVE)
                     stopSelf()
                 }
             } else {
-                Log.d(TAG, "Azan Long mode: playing full audio.")
+                Log.d(TAG, "Azan Long mode: playing full azan audio.")
+                scheduleSelfStop(240000L) // 4 min max safeguard
                 mp.setOnCompletionListener {
                     Log.d(TAG, "Full Azan completed.")
                     stopPlaybackInternal()
@@ -194,10 +194,11 @@ class AzanPlayerService : Service() {
         }
     }
 
-    private fun setupRingtonePlayerAndLoop(mp: MediaPlayer, targetLoops: Int) {
+    private fun setupRingtonePlayer(mp: MediaPlayer, targetLoops: Int) {
         try {
             mediaPlayer = mp
-            // Max volume on Alarm stream
+            mp.isLooping = false
+            
             try {
                 val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
                 val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
@@ -212,10 +213,14 @@ class AzanPlayerService : Service() {
             var currentLoop = 1
             Log.d(TAG, "Starting ringtone playback (Loop $currentLoop of $targetLoops)")
 
+            // Max safety timeout (e.g. 5 loops -> 25s, 10 loops -> 45s)
+            val maxSafeguardMillis = if (targetLoops <= 5) 25000L else 45000L
+            scheduleSelfStop(maxSafeguardMillis)
+
             mp.setOnCompletionListener { player ->
                 if (currentLoop < targetLoops) {
                     currentLoop++
-                    Log.d(TAG, "Ringtone loop completed. Starting repetition $currentLoop of $targetLoops")
+                    Log.d(TAG, "Ringtone loop finished. Starting repetition $currentLoop of $targetLoops")
                     try {
                         player.seekTo(0)
                         player.start()
@@ -240,14 +245,41 @@ class AzanPlayerService : Service() {
         }
     }
 
+    private fun scheduleSelfStop(delayMillis: Long) {
+        stopRunnable?.let { mainHandler.removeCallbacks(it) }
+        val r = Runnable {
+            Log.d(TAG, "Safety stop triggered after ${delayMillis}ms")
+            stopPlaybackInternal()
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+        }
+        stopRunnable = r
+        mainHandler.postDelayed(r, delayMillis)
+
+        autoStopJob?.cancel()
+        autoStopJob = serviceScope.launch {
+            delay(delayMillis)
+            Log.d(TAG, "Coroutine safety stop after ${delayMillis}ms")
+            stopPlaybackInternal()
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+        }
+    }
+
     private fun stopPlaybackInternal() {
+        stopRunnable?.let {
+            mainHandler.removeCallbacks(it)
+            stopRunnable = null
+        }
         autoStopJob?.cancel()
         autoStopJob = null
         try {
-            if (mediaPlayer?.isPlaying == true) {
-                mediaPlayer?.stop()
+            mediaPlayer?.let { player ->
+                if (player.isPlaying) {
+                    player.stop()
+                }
+                player.release()
             }
-            mediaPlayer?.release()
             mediaPlayer = null
         } catch (e: Exception) {
             Log.e(TAG, "Error releasing mediaPlayer", e)
@@ -307,7 +339,7 @@ class AzanPlayerService : Service() {
                 enableVibration(true)
             }
             val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(channel)
+            manager?.createNotificationChannel(channel)
         }
     }
 

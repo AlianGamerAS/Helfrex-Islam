@@ -68,7 +68,7 @@ class PreferencesManager(private val context: Context) {
         val currentStyle = _settingsFlow.value.themeStyle
         _settingsFlow.value = _settingsFlow.value.copy(isDarkMode = isDark)
         try {
-            com.example.util.IconManager.scheduleIconUpdate(context, currentStyle, isDark)
+            com.example.util.IconManager.updateAppIcon(context, currentStyle, isDark)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -79,7 +79,7 @@ class PreferencesManager(private val context: Context) {
         val isDark = _settingsFlow.value.isDarkMode
         _settingsFlow.value = _settingsFlow.value.copy(themeStyle = style)
         try {
-            com.example.util.IconManager.scheduleIconUpdate(context, style, isDark)
+            com.example.util.IconManager.updateAppIcon(context, style, isDark)
         } catch (e: Exception) {
             e.printStackTrace()
         }

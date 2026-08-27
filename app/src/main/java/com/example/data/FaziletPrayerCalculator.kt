@@ -10,7 +10,6 @@ import kotlin.math.asin
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.floor
-import kotlin.math.round
 import kotlin.math.sin
 import kotlin.math.tan
 
@@ -21,65 +20,73 @@ import kotlin.math.tan
 object FaziletPrayerCalculator {
 
     // Temkin parameters calibrated strictly to Fazilet Takvimi
-    private const val TEMKIN_IMSAK_MIN = -7  // Temkin for Imsak (subtracted to ensure safety before dawn)
+    private const val TEMKIN_IMSAK_MIN = -8  // Temkin for Imsak (Fazilet standard)
     private const val TEMKIN_GUNES_MIN = -4  // Temkin for sunrise
     private const val TEMKIN_OGLE_MIN = 7    // Temkin for Dhuhr (added after true noon)
-    private const val TEMKIN_IKINDI_MIN = 5  // Temkin for Asr
+    private const val TEMKIN_IKINDI_MIN = 5  // Temkin for Asr (Asr-ı Evvel)
     private const val TEMKIN_AKSAM_MIN = 7   // Temkin for Maghrib
-    private const val TEMKIN_YATSI_MIN = 5   // Temkin for Isha
+    private const val TEMKIN_YATSI_MIN = 5   // Temkin for Isha (17 degrees + 5 min)
 
     // Solar depression angles for Fazilet
     private const val FAZR_ANGLE = 19.0      // 19.0 degrees for Imsak (Fazilet standard)
     private const val ISHA_ANGLE = 17.0      // 17.0 degrees for Yatsi (Fazilet standard)
 
-    fun calculateDailyTimes(
-        calendar: Calendar,
+    fun getTimeZoneForLocation(
         latitude: Double,
         longitude: Double,
         cityName: String,
         districtName: String = ""
-    ): PrayerTimesData {
-        val year = calendar.get(Calendar.YEAR)
-        val month = calendar.get(Calendar.MONTH) + 1
-        val day = calendar.get(Calendar.DAY_OF_MONTH)
-
-        // Check if the selected location is in Turkey
+    ): TimeZone {
         val isTurkey = (latitude in 35.5..42.5 && longitude in 25.5..45.0) ||
                 CityDatabase.turkeyCities.any { it.name.equals(cityName, ignoreCase = true) } ||
                 districtName.contains("Türkiye", ignoreCase = true) ||
                 districtName.contains("Turkey", ignoreCase = true)
 
-        // Check if the location is in Azerbaijan
         val isAzerbaijan = (latitude in 38.0..42.2 && longitude in 44.5..51.0) ||
                 CityDatabase.azerbaijanCities.any { it.name.equals(cityName, ignoreCase = true) } ||
                 districtName.contains("Azerbaycan", ignoreCase = true) ||
                 districtName.contains("Azerbaijan", ignoreCase = true)
 
-        // Target timezone offset in hours (Turkey: UTC+3, Azerbaijan: UTC+4)
-        val timeZone: Double = when {
-            isTurkey -> 3.0
-            isAzerbaijan -> 4.0
-            // Saudi Arabia (Mecca, Medina)
-            (latitude in 16.0..32.0 && longitude in 34.0..55.0) -> 3.0
-            // General accurate geographical timezone from longitude
-            else -> Math.round(longitude / 15.0).toDouble()
-        }
+        val isSaudi = (latitude in 16.0..32.0 && longitude in 34.0..55.0)
 
-        val targetTimeZone = when {
+        return when {
             isTurkey -> TimeZone.getTimeZone("Europe/Istanbul")
             isAzerbaijan -> TimeZone.getTimeZone("Asia/Baku")
+            isSaudi -> TimeZone.getTimeZone("Asia/Riyadh")
             else -> {
-                val offsetHours = timeZone.toInt()
+                val offsetHours = Math.round(longitude / 15.0).toInt()
                 val sign = if (offsetHours >= 0) "+" else "-"
                 TimeZone.getTimeZone(String.format(java.util.Locale.US, "GMT%s%02d:00", sign, Math.abs(offsetHours)))
             }
         }
+    }
+
+    fun calculateDailyTimes(
+        baseCalendar: Calendar,
+        latitude: Double,
+        longitude: Double,
+        cityName: String,
+        districtName: String = ""
+    ): PrayerTimesData {
+        val targetTimeZone = getTimeZoneForLocation(latitude, longitude, cityName, districtName)
+        
+        // Convert to target timezone calendar to avoid UTC/local mismatch
+        val calendar = Calendar.getInstance(targetTimeZone).apply {
+            timeInMillis = baseCalendar.timeInMillis
+        }
+
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH) + 1
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+        // Raw timezone offset in hours
+        val timeZoneOffsetHours = targetTimeZone.getOffset(calendar.timeInMillis) / 3600000.0
 
         // --- High-Precision NOAA Solar Calculations ---
         val a = floor((14 - month) / 12.0)
         val y1 = year + 4800 - a
         val m1 = month + 12 * a - 3
-        val jd = day + floor((153 * m1 + 2) / 5.0) + 365 * y1 + floor(y1 / 4.0) - floor(y1 / 100.0) + floor(y1 / 400.0) - 32045.0 - 0.5 + (12.0 - timeZone) / 24.0
+        val jd = day + floor((153 * m1 + 2) / 5.0) + 365 * y1 + floor(y1 / 4.0) - floor(y1 / 100.0) + floor(y1 / 400.0) - 32045.0 - 0.5 + (12.0 - timeZoneOffsetHours) / 24.0
 
         val t = (jd - 2451545.0) / 36525.0
 
@@ -131,7 +138,7 @@ object FaziletPrayerCalculator {
         val latRad = Math.toRadians(latitude)
 
         // Solar noon time in hours (Local Time)
-        val solarNoon = (720.0 - 4.0 * longitude - eqTime) / 60.0 + timeZone
+        val solarNoon = (720.0 - 4.0 * longitude - eqTime) / 60.0 + timeZoneOffsetHours
 
         // Hour angles
         fun hourAngle(angle: Double): Double {
@@ -148,7 +155,7 @@ object FaziletPrayerCalculator {
         // Yatsi angle (17.0 degrees below horizon -> -17.0)
         val haYatsi = hourAngle(-ISHA_ANGLE)
 
-        // Asr hour angle (Standard / Shafi'i shadow ratio = 1)
+        // Asr hour angle (Standard Shafi'i shadow ratio = 1 + zeval shadow)
         val asrAltRad = atan2(1.0, 1.0 + tan(Math.abs(latRad - decl)))
         val cosHaAsr = (sin(asrAltRad) - sin(latRad) * sin(decl)) / (cos(latRad) * cos(decl))
         val haAsr = if (cosHaAsr in -1.0..1.0) Math.toDegrees(acos(cosHaAsr)) else 45.0
@@ -164,7 +171,7 @@ object FaziletPrayerCalculator {
         // Apply Fazilet Temkin adjustments (in minutes)
         val imsakMinutes = Math.round(rawImsak * 60.0).toInt() + TEMKIN_IMSAK_MIN
         val gunesMinutes = Math.round(rawGunes * 60.0).toInt() + TEMKIN_GUNES_MIN
-        // In Fazilet Takvimi calendar, Sabah prayer is 20 minutes after Imsak
+        // In Fazilet Takvimi calendar, Sabah prayer is scheduled 20 minutes after Imsak
         val sabahMinutes = imsakMinutes + 20
         val ogleMinutes = Math.round(rawOgle * 60.0).toInt() + TEMKIN_OGLE_MIN
         val ikindiMinutes = Math.round(rawIkindi * 60.0).toInt() + TEMKIN_IKINDI_MIN
@@ -175,7 +182,7 @@ object FaziletPrayerCalculator {
             val normalized = (totalMinutes % 1440 + 1440) % 1440
             val h = normalized / 60
             val m = normalized % 60
-            return String.format("%02d:%02d", h, m)
+            return String.format(java.util.Locale.US, "%02d:%02d", h, m)
         }
 
         fun timeStrToMillis(totalMinutes: Int): Long {
@@ -202,7 +209,7 @@ object FaziletPrayerCalculator {
             PrayerTimeItem(PrayerType.YATSI, minutesToTimeStr(yatsiMinutes), timeStrToMillis(yatsiMinutes))
         )
 
-        val gregorianDateStr = String.format("%02d.%02d.%04d", day, month, year)
+        val gregorianDateStr = String.format(java.util.Locale.US, "%02d.%02d.%04d", day, month, year)
         val hijriDateStr = calculateHijriDate(calendar)
 
         return PrayerTimesData(
@@ -215,7 +222,7 @@ object FaziletPrayerCalculator {
     }
 
     /**
-     * Approximate Islamic Hijri Calendar calculator based on Umm al-Qura / Tabular method
+     * Fazilet Takvimi & Diyanet Calibrated Islamic Hijri Calendar calculator
      */
     fun calculateHijriDate(calendar: Calendar): String {
         val y = calendar.get(Calendar.YEAR)
@@ -229,8 +236,8 @@ object FaziletPrayerCalculator {
         val jd = d + floor((153 * mm + 2) / 5.0).toInt() + 365 * yy + floor(yy / 4.0).toInt() -
                 floor(yy / 100.0).toInt() + floor(yy / 400.0).toInt() - 32045
 
-        // Hijri algorithm from JD
-        val l = jd - 1948440 + 10632
+        // Calibrated Hijri algorithm from JD (Offset +1 day for Fazilet Takvimi moon sighting alignment)
+        val l = jd - 1948440 + 10632 + 1
         val n = floor((l - 1) / 10631.0).toInt()
         val l1 = l - 10631 * n + 354
         val j = (floor((10985 - l1) / 5316.0) * floor((50 * l1) / 17719.0) +
@@ -247,7 +254,7 @@ object FaziletPrayerCalculator {
             "Ramazan", "Şevval", "Zilkade", "Zilhicce"
         )
 
-        val monthName = if (hijriMonth in 1..12) hijriMonthsTr[hijriMonth - 1] else "Ramazan"
+        val monthName = if (hijriMonth in 1..12) hijriMonthsTr[hijriMonth - 1] else "Rebiülevvel"
         return "$hijriDay $monthName $hijriYear"
     }
 }

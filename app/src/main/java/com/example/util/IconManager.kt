@@ -9,13 +9,19 @@ import com.example.model.ThemeStyle
 object IconManager {
     private const val TAG = "IconManager"
 
-    private const val ALIAS_DEFAULT = "com.example.MainActivityDefault"
-    private const val ALIAS_CLASSIC_LIGHT = "com.example.MainActivityClassicLight"
-    private const val ALIAS_NEON_BLUE = "com.example.MainActivityNeonBlue"
-    private const val ALIAS_NEON_PURPLE = "com.example.MainActivityNeonPurple"
-    private const val ALIAS_NEON_EMERALD = "com.example.MainActivityNeonEmerald"
+    const val ALIAS_DEFAULT = "com.example.MainActivityDefault"
+    const val ALIAS_CLASSIC_LIGHT = "com.example.MainActivityClassicLight"
+    const val ALIAS_NEON_BLUE = "com.example.MainActivityNeonBlue"
+    const val ALIAS_NEON_PURPLE = "com.example.MainActivityNeonPurple"
+    const val ALIAS_NEON_EMERALD = "com.example.MainActivityNeonEmerald"
 
-    private var pendingTargetAlias: String? = null
+    private val allAliases = listOf(
+        ALIAS_DEFAULT,
+        ALIAS_CLASSIC_LIGHT,
+        ALIAS_NEON_BLUE,
+        ALIAS_NEON_PURPLE,
+        ALIAS_NEON_EMERALD
+    )
 
     /**
      * Returns the exact alias to enable for the current theme and dark mode setting.
@@ -29,49 +35,44 @@ object IconManager {
         }
     }
 
-    fun scheduleIconUpdate(context: Context, themeStyle: ThemeStyle, isDarkMode: Boolean) {
-        pendingTargetAlias = getTargetAlias(themeStyle, isDarkMode)
-    }
-
     /**
-     * Applies icon alias updates safely when the activity is stopped or in background.
-     * Ensures EXACTLY ONE alias is enabled to prevent duplicate launcher icons.
+     * Immediately applies icon alias updates.
+     * Enables target alias first, then disables other aliases using DONT_KILL_APP.
      */
-    fun applyPendingIconUpdate(context: Context) {
-        val targetAlias = pendingTargetAlias ?: return
-        pendingTargetAlias = null
+    fun updateAppIcon(context: Context, themeStyle: ThemeStyle, isDarkMode: Boolean) {
+        val targetAlias = getTargetAlias(themeStyle, isDarkMode)
+        val appContext = context.applicationContext
+        val pm = appContext.packageManager
+        val pkg = appContext.packageName
 
-        val allAliases = listOf(
-            ALIAS_DEFAULT,
-            ALIAS_CLASSIC_LIGHT,
-            ALIAS_NEON_BLUE,
-            ALIAS_NEON_PURPLE,
-            ALIAS_NEON_EMERALD
-        )
-        val pm = context.packageManager
+        try {
+            // 1. Enable target alias FIRST so the launcher always has a valid component
+            val targetComponent = ComponentName(pkg, targetAlias)
+            pm.setComponentEnabledSetting(
+                targetComponent,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP
+            )
 
-        for (alias in allAliases) {
-            val componentName = ComponentName(context.packageName, alias)
-            val desiredState = if (alias == targetAlias) {
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-            } else {
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED
-            }
-            try {
-                if (pm.getComponentEnabledSetting(componentName) != desiredState) {
+            // 2. Disable all other aliases
+            for (alias in allAliases) {
+                if (alias != targetAlias) {
+                    val otherComponent = ComponentName(pkg, alias)
                     pm.setComponentEnabledSetting(
-                        componentName,
-                        desiredState,
+                        otherComponent,
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                         PackageManager.DONT_KILL_APP
                     )
                 }
-            } catch (e: Exception) {
-                Log.w(TAG, "Could not update alias setting for $alias: ${e.message}")
             }
+            Log.d(TAG, "Successfully applied launcher icon alias: $targetAlias")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error applying icon alias: ${e.message}", e)
         }
     }
 
-    fun updateAppIcon(context: Context, themeStyle: ThemeStyle, isDarkMode: Boolean) {
-        scheduleIconUpdate(context, themeStyle, isDarkMode)
+    fun applyPendingIconUpdate(context: Context) {
+        // Kept for backward compatibility
     }
 }
+

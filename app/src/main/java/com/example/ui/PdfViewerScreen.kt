@@ -195,8 +195,6 @@ fun PdfViewerScreen(
     var localPdfFile by remember { mutableStateOf<File?>(null) }
     var reloadTrigger by remember { mutableIntStateOf(0) }
 
-    var isDarkModeActive by remember { mutableStateOf(isDarkTheme) }
-
     var safePdfDoc by remember { mutableStateOf<SafePdfDocument?>(null) }
     var pageCount by remember { mutableIntStateOf(0) }
 
@@ -312,13 +310,13 @@ fun PdfViewerScreen(
     }
 
     // Strict neutral colors: Dark Mode = Neutral Gray (#1E1E1E), Light Mode = Crisp White (#FFFFFF)
-    val deskBgColor = if (isDarkModeActive) Color(0xFF181818) else Color(0xFFFFFFFF)
-    val paperContainerBg = if (isDarkModeActive) Color(0xFF242424) else Color(0xFFFFFFFF)
-    val paperBorderColor = if (isDarkModeActive) Color(0xFF383838) else Color(0xFFE5E7EB)
-    val topBarBg = if (isDarkModeActive) Color(0xFF1E1E1E) else Color(0xFFFFFFFF)
-    val bottomBarBg = if (isDarkModeActive) Color(0xFF1E1E1E) else Color(0xFFFFFFFF)
-    val primaryText = if (isDarkModeActive) Color(0xFFF1F5F9) else Color(0xFF0F172A)
-    val secondaryText = if (isDarkModeActive) Color(0xFF94A3B8) else Color(0xFF64748B)
+    val deskBgColor = if (isDarkTheme) Color(0xFF181818) else Color(0xFFFFFFFF)
+    val paperContainerBg = if (isDarkTheme) Color(0xFF242424) else Color(0xFFFFFFFF)
+    val paperBorderColor = if (isDarkTheme) Color(0xFF383838) else Color(0xFFE5E7EB)
+    val topBarBg = if (isDarkTheme) Color(0xFF1E1E1E) else Color(0xFFFFFFFF)
+    val bottomBarBg = if (isDarkTheme) Color(0xFF1E1E1E) else Color(0xFFFFFFFF)
+    val primaryText = if (isDarkTheme) Color(0xFFF1F5F9) else Color(0xFF0F172A)
+    val secondaryText = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF64748B)
 
     // Jump to Page Dialog
     if (showJumpDialog) {
@@ -448,18 +446,6 @@ fun PdfViewerScreen(
                         }
                     }
 
-                    // Dark (Neutral Gray) / Light (White) Toggle Button
-                    IconButton(
-                        onClick = { isDarkModeActive = !isDarkModeActive },
-                        modifier = Modifier.testTag("pdf_dark_filter_toggle")
-                    ) {
-                        Icon(
-                            imageVector = if (isDarkModeActive) Icons.Default.Brightness7 else Icons.Default.Brightness4,
-                            contentDescription = if (isDarkModeActive) "Açık Tema (Beyaz)" else "Karanlık Tema (Gri)",
-                            tint = if (isDarkModeActive) Color(0xFFFBBF24) else primaryText
-                        )
-                    }
-
                     // Zoom in & out controls
                     IconButton(
                         onClick = { scale = (scale + 0.4f).coerceAtMost(4f) },
@@ -538,7 +524,7 @@ fun PdfViewerScreen(
                             // Interactive Page Indicator Button
                             Surface(
                                 shape = RoundedCornerShape(20.dp),
-                                color = if (isDarkModeActive) Color(0xFF2E2E2E) else Color(0xFFF1F5F9),
+                                color = if (isDarkTheme) Color(0xFF2E2E2E) else Color(0xFFF1F5F9),
                                 modifier = Modifier.clickable {
                                     jumpPageInput = "${pagerState.currentPage + 1}"
                                     showJumpDialog = true
@@ -597,7 +583,7 @@ fun PdfViewerScreen(
                         Icon(
                             imageVector = Icons.Default.Download,
                             contentDescription = null,
-                            tint = if (isDarkModeActive) Color.White else MaterialTheme.colorScheme.primary,
+                            tint = if (isDarkTheme) Color.White else MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(48.dp)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
@@ -633,8 +619,8 @@ fun PdfViewerScreen(
                                 .fillMaxWidth(0.65f)
                                 .height(8.dp)
                                 .clip(RoundedCornerShape(4.dp)),
-                            color = if (isDarkModeActive) Color(0xFF9E9E9E) else MaterialTheme.colorScheme.primary,
-                            trackColor = if (isDarkModeActive) Color(0xFF2C2C2E) else Color(0xFFE2E8F0)
+                            color = if (isDarkTheme) Color(0xFF9E9E9E) else MaterialTheme.colorScheme.primary,
+                            trackColor = if (isDarkTheme) Color(0xFF2C2C2E) else Color(0xFFE2E8F0)
                         )
                     }
                 }
@@ -759,7 +745,7 @@ fun PdfViewerScreen(
                                             contentAlignment = Alignment.Center
                                         ) {
                                             CircularProgressIndicator(
-                                                color = if (isDarkModeActive) Color.White else MaterialTheme.colorScheme.primary,
+                                                color = if (isDarkTheme) Color.White else MaterialTheme.colorScheme.primary,
                                                 modifier = Modifier.size(36.dp)
                                             )
                                         }
@@ -808,7 +794,7 @@ fun PdfViewerScreen(
 
                 else -> {
                     CircularProgressIndicator(
-                        color = if (isDarkModeActive) Color.White else MaterialTheme.colorScheme.primary,
+                        color = if (isDarkTheme) Color.White else MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(44.dp)
                     )
                 }

@@ -493,14 +493,35 @@ private fun PrayerTimesSubScreen(
     onPrayerToggled: (String, Boolean) -> Unit,
     onBack: () -> Unit
 ) {
-    val isTr = settings.language == AppLanguage.TR
+    val lang = settings.language
+
+    val title = when (lang) {
+        AppLanguage.TR -> "Namaz Vakitleri"
+        AppLanguage.RU -> "Время намаза"
+        AppLanguage.AZ -> "Namaz Vaxtları"
+        AppLanguage.EN -> "Prayer Times"
+    }
+
+    val subtitle = when (lang) {
+        AppLanguage.TR -> "Ana ekranda ve bildirim şeridinde görünmesini istediğiniz vakitleri seçin:"
+        AppLanguage.RU -> "Выберите время намаза для отображения на главном экране и в уведомлениях:"
+        AppLanguage.AZ -> "Əsas ekranda və bildiriş zolağında görünməsini istədiyiniz vaxtları seçin:"
+        AppLanguage.EN -> "Select which prayer times are shown on home screen and notification bar:"
+    }
+
+    val backDesc = when (lang) {
+        AppLanguage.TR -> "Geri"
+        AppLanguage.RU -> "Назад"
+        AppLanguage.AZ -> "Geri"
+        AppLanguage.EN -> "Back"
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = if (isTr) "Namaz Vakitleri" else "Prayer Times",
+                        text = title,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -510,7 +531,7 @@ private fun PrayerTimesSubScreen(
                         onClick = onBack,
                         modifier = Modifier.testTag("back_button_prayer_times")
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = backDesc)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -530,7 +551,7 @@ private fun PrayerTimesSubScreen(
         ) {
             item {
                 Text(
-                    text = if (isTr) "Ana ekranda ve bildirim şeridinde görünmesini istediğiniz vakitleri seçin:" else "Select which prayer times are shown on home screen and notification bar:",
+                    text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 6.dp)
@@ -587,11 +608,90 @@ private fun LocationManagementSubScreen(
 ) {
     val context = LocalContext.current
     val prefsManager = remember { PreferencesManager.getInstance(context) }
-    val isTr = settings.language == AppLanguage.TR
+    val lang = settings.language
+
+    val title = when (lang) {
+        AppLanguage.TR -> "Konum ve Şehir Yönetimi"
+        AppLanguage.RU -> "Управление местоположением"
+        AppLanguage.AZ -> "Məkan və Şəhər İdarəetməsi"
+        AppLanguage.EN -> "Location & City Management"
+    }
+
+    val backDesc = when (lang) {
+        AppLanguage.TR -> "Geri"
+        AppLanguage.RU -> "Назад"
+        AppLanguage.AZ -> "Geri"
+        AppLanguage.EN -> "Back"
+    }
 
     val isManual = prefsManager.isManualLocation()
     val currentCountry = prefsManager.getManualCountry()
     val (currentCity, currentDistrict) = prefsManager.getLastCityAndDistrict()
+
+    val currentModeLabel = when (lang) {
+        AppLanguage.TR -> "Mevcut Konum Modu:"
+        AppLanguage.RU -> "Текущий режим местоположения:"
+        AppLanguage.AZ -> "Mövcud Məkan Rejimi:"
+        AppLanguage.EN -> "Current Location Mode:"
+    }
+
+    val currentModeValue = if (isManual) {
+        when (lang) {
+            AppLanguage.TR -> "Manuel Seçim ($currentCity, $currentCountry)"
+            AppLanguage.RU -> "Ручной выбор ($currentCity, $currentCountry)"
+            AppLanguage.AZ -> "Manual Seçim ($currentCity, $currentCountry)"
+            AppLanguage.EN -> "Manual Selection ($currentCity, $currentCountry)"
+        }
+    } else {
+        when (lang) {
+            AppLanguage.TR -> "Otomatik GPS ($currentCity)"
+            AppLanguage.RU -> "Автоматический GPS ($currentCity)"
+            AppLanguage.AZ -> "Avtomatik GPS ($currentCity)"
+            AppLanguage.EN -> "Automatic GPS ($currentCity)"
+        }
+    }
+
+    val manualSectionTitle = when (lang) {
+        AppLanguage.TR -> "Manuel Ülke ve Şehir Seçimi (İnternetsiz)"
+        AppLanguage.RU -> "Ручной выбор страны и города (Офлайн)"
+        AppLanguage.AZ -> "Manual Ölkə və Şəhər Seçimi (İnternetsiz)"
+        AppLanguage.EN -> "Manual Country & City Selection (Offline)"
+    }
+
+    val manualSectionDesc = when (lang) {
+        AppLanguage.TR -> "İnternet bağlantısına ihtiyaç duymadan bulunduğunuz şehri seçip kaydedebilirsiniz."
+        AppLanguage.RU -> "Вы можете выбрать и сохранить город без подключения к интернету."
+        AppLanguage.AZ -> "İnternet bağlantısına ehtiyac olmadan olduğunuz şəhəri seçib yadda saxlaya bilərsiniz."
+        AppLanguage.EN -> "Select and save your city without needing an internet connection."
+    }
+
+    val countryLabel = when (lang) {
+        AppLanguage.TR -> "Ülke"
+        AppLanguage.RU -> "Страна"
+        AppLanguage.AZ -> "Ölkə"
+        AppLanguage.EN -> "Country"
+    }
+
+    val cityLabel = when (lang) {
+        AppLanguage.TR -> "Şehir / Bölge"
+        AppLanguage.RU -> "Город / Регион"
+        AppLanguage.AZ -> "Şəhər / Region"
+        AppLanguage.EN -> "City / Region"
+    }
+
+    val saveText = when (lang) {
+        AppLanguage.TR -> "Kaydet"
+        AppLanguage.RU -> "Сохранить"
+        AppLanguage.AZ -> "Yadda Saxla"
+        AppLanguage.EN -> "Save"
+    }
+
+    val autoGpsText = when (lang) {
+        AppLanguage.TR -> "Konumu Otomatik Ayarla"
+        AppLanguage.RU -> "Определить местоположение автоматически"
+        AppLanguage.AZ -> "Məkanı Avtomatik Təyin Et"
+        AppLanguage.EN -> "Set Location Automatically"
+    }
 
     val countries = CityDatabase.countries
     var selectedCountryIndex by remember {
@@ -615,7 +715,7 @@ private fun LocationManagementSubScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (isTr) "Konum ve Şehir Yönetimi" else "Location & City Management",
+                        text = title,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -625,7 +725,7 @@ private fun LocationManagementSubScreen(
                         onClick = onBack,
                         modifier = Modifier.testTag("back_button_location")
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = backDesc)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -672,16 +772,12 @@ private fun LocationManagementSubScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = if (isTr) "Mevcut Konum Modu:" else "Current Location Mode:",
+                                text = currentModeLabel,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = if (isManual) {
-                                    if (isTr) "Manuel Seçim ($currentCity, $currentCountry)" else "Manual Selection ($currentCity, $currentCountry)"
-                                } else {
-                                    if (isTr) "Otomatik GPS ($currentCity)" else "Automatic GPS ($currentCity)"
-                                },
+                                text = currentModeValue,
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -694,13 +790,13 @@ private fun LocationManagementSubScreen(
             item {
                 HorizontalDivider()
                 Text(
-                    text = if (isTr) "Manuel Ülke ve Şehir Seçimi (İnternetsiz)" else "Manual Country & City Selection (Offline)",
+                    text = manualSectionTitle,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = if (isTr) "İnternet bağlantısına ihtiyaç duymadan bulunduğunuz şehri seçip kaydedebilirsiniz." else "Select and save your city without needing an internet connection.",
+                    text = manualSectionDesc,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 2.dp)
@@ -709,16 +805,17 @@ private fun LocationManagementSubScreen(
 
             // Country Selector Dropdown
             item {
+                val countryDisplayName = if (lang == AppLanguage.TR || lang == AppLanguage.AZ) currentCountryObj.nameTr else currentCountryObj.nameEn
                 ExposedDropdownMenuBox(
                     expanded = countryExpanded,
                     onExpandedChange = { countryExpanded = !countryExpanded },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
-                        value = if (isTr) currentCountryObj.nameTr else currentCountryObj.nameEn,
+                        value = countryDisplayName,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text(if (isTr) "Ülke" else "Country") },
+                        label = { Text(countryLabel) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = countryExpanded) },
                         modifier = Modifier
                             .menuAnchor()
@@ -731,8 +828,9 @@ private fun LocationManagementSubScreen(
                         onDismissRequest = { countryExpanded = false }
                     ) {
                         countries.forEachIndexed { index, country ->
+                            val cName = if (lang == AppLanguage.TR || lang == AppLanguage.AZ) country.nameTr else country.nameEn
                             DropdownMenuItem(
-                                text = { Text(if (isTr) country.nameTr else country.nameEn) },
+                                text = { Text(cName) },
                                 onClick = {
                                     selectedCountryIndex = index
                                     selectedCityIndex = 0
@@ -759,7 +857,7 @@ private fun LocationManagementSubScreen(
                         value = selectedCityObj.name,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text(if (isTr) "Şehir / Bölge" else "City / Region") },
+                        label = { Text(cityLabel) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cityExpanded) },
                         modifier = Modifier
                             .menuAnchor()
@@ -798,11 +896,13 @@ private fun LocationManagementSubScreen(
                             chosenCity.latitude,
                             chosenCity.longitude
                         )
-                        Toast.makeText(
-                            context,
-                            if (isTr) "${chosenCity.name} konumu kaydedildi." else "Location ${chosenCity.name} saved.",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        val saveMsg = when (lang) {
+                            AppLanguage.TR -> "${chosenCity.name} konumu kaydedildi."
+                            AppLanguage.RU -> "Местоположение ${chosenCity.name} сохранено."
+                            AppLanguage.AZ -> "${chosenCity.name} məkanı yadda saxlanıldı."
+                            AppLanguage.EN -> "Location ${chosenCity.name} saved."
+                        }
+                        Toast.makeText(context, saveMsg, Toast.LENGTH_SHORT).show()
                         onBack()
                     },
                     modifier = Modifier
@@ -814,7 +914,7 @@ private fun LocationManagementSubScreen(
                     Icon(imageVector = Icons.Default.Check, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (isTr) "Kaydet" else "Save",
+                        text = saveText,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium
                     )
@@ -826,11 +926,13 @@ private fun LocationManagementSubScreen(
                 Button(
                     onClick = {
                         onAutoGps()
-                        Toast.makeText(
-                            context,
-                            if (isTr) "Otomatik GPS konumuna geçildi." else "Switched to automatic GPS location.",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        val autoMsg = when (lang) {
+                            AppLanguage.TR -> "Otomatik GPS konumuna geçildi."
+                            AppLanguage.RU -> "Включено автоматическое определение GPS."
+                            AppLanguage.AZ -> "Avtomatik GPS məkanına keçildi."
+                            AppLanguage.EN -> "Switched to automatic GPS location."
+                        }
+                        Toast.makeText(context, autoMsg, Toast.LENGTH_SHORT).show()
                         onBack()
                     },
                     modifier = Modifier
@@ -846,7 +948,7 @@ private fun LocationManagementSubScreen(
                     Icon(imageVector = Icons.Default.MyLocation, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (isTr) "Konumu Otomatik Ayarla" else "Set Location Automatically",
+                        text = autoGpsText,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium
                     )
@@ -866,28 +968,49 @@ private fun AzanSoundSubScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-    val isTr = settings.language == AppLanguage.TR
+    val lang = settings.language
     val coroutineScope = rememberCoroutineScope()
+
+    val title = when (lang) {
+        AppLanguage.TR -> "Ezan Sesi ve Alarmlar"
+        AppLanguage.RU -> "Звук азана и сигналы"
+        AppLanguage.AZ -> "Azan Səsi və Siqnallar"
+        AppLanguage.EN -> "Azan Sound & Alarms"
+    }
+
+    val backDesc = when (lang) {
+        AppLanguage.TR -> "Geri"
+        AppLanguage.RU -> "Назад"
+        AppLanguage.AZ -> "Geri"
+        AppLanguage.EN -> "Back"
+    }
+
+    val soundSectionTitle = when (lang) {
+        AppLanguage.TR -> "Vakit girdiğinde çalacak ses:"
+        AppLanguage.RU -> "Звук при наступлении времени намаза:"
+        AppLanguage.AZ -> "Vaxt daxil olduqda səslənəcək səs:"
+        AppLanguage.EN -> "Sound played on prayer time:"
+    }
 
     var isTestPlaying by remember { mutableStateOf(false) }
     var testMediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
-    var testLoopCount by remember { mutableIntStateOf(1) }
     var testJob by remember { mutableStateOf<Job?>(null) }
 
     fun stopTestSound() {
         testJob?.cancel()
         testJob = null
         try {
-            if (testMediaPlayer?.isPlaying == true) {
-                testMediaPlayer?.stop()
+            testMediaPlayer?.let { player ->
+                if (player.isPlaying) {
+                    player.stop()
+                }
+                player.release()
             }
-            testMediaPlayer?.release()
             testMediaPlayer = null
         } catch (e: Exception) {
             e.printStackTrace()
         }
         isTestPlaying = false
-        testLoopCount = 1
     }
 
     fun playTestSound() {
@@ -896,11 +1019,13 @@ private fun AzanSoundSubScreen(
 
         when (settings.azanSound) {
             AzanSound.SILENT -> {
-                Toast.makeText(
-                    context,
-                    if (isTr) "Sessiz mod seçili. Ses çalınmaz." else "Silent mode active. No sound played.",
-                    Toast.LENGTH_SHORT
-                ).show()
+                val silentMsg = when (lang) {
+                    AppLanguage.TR -> "Sessiz mod seçili. Ses çalınmaz."
+                    AppLanguage.RU -> "Выбран беззвучный режим."
+                    AppLanguage.AZ -> "Səssiz rejim seçilib. Səs çalınmır."
+                    AppLanguage.EN -> "Silent mode active. No sound played."
+                }
+                Toast.makeText(context, silentMsg, Toast.LENGTH_SHORT).show()
             }
 
             AzanSound.RINGTONE -> {
@@ -909,13 +1034,6 @@ private fun AzanSoundSubScreen(
 
                 coroutineScope.launch {
                     try {
-                        com.example.util.SoundPlayerHelper.prepareAudioFile(
-                            context = context,
-                            fileName = "ringtone.mp3",
-                            remoteUrl = com.example.data.FileDownloader.URL_RINGTONE,
-                            rawFallbackRes = rawResId
-                        )
-
                         val mp = com.example.util.SoundPlayerHelper.createMediaPlayer(
                             context = context,
                             rawResId = rawResId,
@@ -925,15 +1043,22 @@ private fun AzanSoundSubScreen(
                         )
 
                         if (mp != null) {
+                            mp.isLooping = false
                             mp.setVolume(1.0f, 1.0f)
                             mp.start()
                             testMediaPlayer = mp
                             isTestPlaying = true
-                            testLoopCount = 1
+
+                            var currentLoop = 1
+                            val maxSafeguard = if (isShort) 25000L else 45000L
+                            testJob = coroutineScope.launch {
+                                kotlinx.coroutines.delay(maxSafeguard)
+                                stopTestSound()
+                            }
 
                             mp.setOnCompletionListener { player ->
-                                if (testLoopCount < targetLoops) {
-                                    testLoopCount++
+                                if (currentLoop < targetLoops) {
+                                    currentLoop++
                                     try {
                                         player.seekTo(0)
                                         player.start()
@@ -945,11 +1070,17 @@ private fun AzanSoundSubScreen(
                                 }
                             }
                         } else {
-                            Toast.makeText(context, if (isTr) "Ses çalınamadı." else "Audio could not play.", Toast.LENGTH_SHORT).show()
+                            val errMsg = when (lang) {
+                                AppLanguage.TR -> "Ses çalınamadı."
+                                AppLanguage.RU -> "Не удалось воспроизвести звук."
+                                AppLanguage.AZ -> "Səs çalına bilmədi."
+                                AppLanguage.EN -> "Audio could not play."
+                            }
+                            Toast.makeText(context, errMsg, Toast.LENGTH_SHORT).show()
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        Toast.makeText(context, if (isTr) "Hata: ${e.message}" else "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -959,13 +1090,6 @@ private fun AzanSoundSubScreen(
 
                 coroutineScope.launch {
                     try {
-                        com.example.util.SoundPlayerHelper.prepareAudioFile(
-                            context = context,
-                            fileName = "ezan.mp3",
-                            remoteUrl = com.example.data.FileDownloader.URL_EZAN,
-                            rawFallbackRes = rawResId
-                        )
-
                         val mp = com.example.util.SoundPlayerHelper.createMediaPlayer(
                             context = context,
                             rawResId = rawResId,
@@ -975,6 +1099,7 @@ private fun AzanSoundSubScreen(
                         )
 
                         if (mp != null) {
+                            mp.isLooping = false
                             mp.setVolume(1.0f, 1.0f)
                             mp.start()
                             testMediaPlayer = mp
@@ -985,17 +1110,30 @@ private fun AzanSoundSubScreen(
                                     kotlinx.coroutines.delay(11000L)
                                     stopTestSound()
                                 }
+                                mp.setOnCompletionListener {
+                                    stopTestSound()
+                                }
                             } else {
+                                testJob = coroutineScope.launch {
+                                    kotlinx.coroutines.delay(240000L)
+                                    stopTestSound()
+                                }
                                 mp.setOnCompletionListener {
                                     stopTestSound()
                                 }
                             }
                         } else {
-                            Toast.makeText(context, if (isTr) "Ses çalınamadı." else "Audio could not play.", Toast.LENGTH_SHORT).show()
+                            val errMsg = when (lang) {
+                                AppLanguage.TR -> "Ses çalınamadı."
+                                AppLanguage.RU -> "Не удалось воспроизвести звук."
+                                AppLanguage.AZ -> "Səs çalına bilmədi."
+                                AppLanguage.EN -> "Audio could not play."
+                            }
+                            Toast.makeText(context, errMsg, Toast.LENGTH_SHORT).show()
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        Toast.makeText(context, if (isTr) "Hata: ${e.message}" else "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -1011,7 +1149,7 @@ private fun AzanSoundSubScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (isTr) "Ezan Sesi ve Alarmlar" else "Azan Sound & Alarms",
+                        text = title,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -1021,7 +1159,7 @@ private fun AzanSoundSubScreen(
                         onClick = onBack,
                         modifier = Modifier.testTag("back_button_azan_sound")
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = backDesc)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -1041,7 +1179,7 @@ private fun AzanSoundSubScreen(
         ) {
             item {
                 Text(
-                    text = if (isTr) "Vakit girdiğinde çalacak ses:" else "Sound played on prayer time:",
+                    text = soundSectionTitle,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -1075,9 +1213,24 @@ private fun AzanSoundSubScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             val soundDesc = when (sound) {
-                                AzanSound.SILENT -> if (isTr) "Sadece sessiz bildirim" else "Silent notification only"
-                                AzanSound.RINGTONE -> if (isTr) "GitHub Zil Sesi (Ezan Sesi.mp3)" else "GitHub Ringtone (Ezan Sesi.mp3)"
-                                AzanSound.AZAN -> if (isTr) "Orijinal Ezan Sesi" else "Original Azan Audio"
+                                AzanSound.SILENT -> when (lang) {
+                                    AppLanguage.TR -> "Sadece sessiz bildirim"
+                                    AppLanguage.RU -> "Только беззвучное уведомление"
+                                    AppLanguage.AZ -> "Yalnız səssiz bildiriş"
+                                    AppLanguage.EN -> "Silent notification only"
+                                }
+                                AzanSound.RINGTONE -> when (lang) {
+                                    AppLanguage.TR -> "Zil Sesi (Ezan Sesi.mp3)"
+                                    AppLanguage.RU -> "Мелодия звонка (Ezan Sesi.mp3)"
+                                    AppLanguage.AZ -> "Zəng Səsi (Ezan Sesi.mp3)"
+                                    AppLanguage.EN -> "Ringtone (Ezan Sesi.mp3)"
+                                }
+                                AzanSound.AZAN -> when (lang) {
+                                    AppLanguage.TR -> "Orijinal Ezan Sesi"
+                                    AppLanguage.RU -> "Оригинальный звук азана"
+                                    AppLanguage.AZ -> "Orijinal Azan Səsi"
+                                    AppLanguage.EN -> "Original Azan Audio"
+                                }
                             }
                             Text(
                                 text = soundDesc,
@@ -1108,11 +1261,7 @@ private fun AzanSoundSubScreen(
                 ) {
                     AzanDuration.values().forEach { duration ->
                         val isSelected = settings.azanDuration == duration
-                        val label = if (duration == AzanDuration.SHORT) {
-                            if (isTr) "Kısa" else "Short"
-                        } else {
-                            if (isTr) "Uzun" else "Long"
-                        }
+                        val label = duration.getName(lang)
                         Surface(
                             modifier = Modifier
                                 .weight(1f)
@@ -1137,6 +1286,22 @@ private fun AzanSoundSubScreen(
 
             item {
                 Spacer(modifier = Modifier.height(10.dp))
+                val testButtonLabel = if (isTestPlaying) {
+                    when (lang) {
+                        AppLanguage.TR -> "Sesi Durdur"
+                        AppLanguage.RU -> "Остановить звук"
+                        AppLanguage.AZ -> "Səsi Dayandır"
+                        AppLanguage.EN -> "Stop Sound"
+                    }
+                } else {
+                    when (lang) {
+                        AppLanguage.TR -> "Seçili Sesi Test Et"
+                        AppLanguage.RU -> "Прослушать звук"
+                        AppLanguage.AZ -> "Seçilmiş Səsi Sınaqdan Keçir"
+                        AppLanguage.EN -> "Test Selected Sound"
+                    }
+                }
+
                 Button(
                     onClick = {
                         if (isTestPlaying) stopTestSound() else playTestSound()
@@ -1156,11 +1321,7 @@ private fun AzanSoundSubScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (isTestPlaying) {
-                            if (isTr) "Sesi Durdur" else "Stop Sound"
-                        } else {
-                            if (isTr) "Seçili Sesi Test Et" else "Test Selected Sound"
-                        },
+                        text = testButtonLabel,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -1178,14 +1339,58 @@ private fun CustomizeThemeSubScreen(
     onThemeStyleChanged: (ThemeStyle) -> Unit,
     onBack: () -> Unit
 ) {
-    val isTr = settings.language == AppLanguage.TR
+    val lang = settings.language
+
+    val title = when (lang) {
+        AppLanguage.TR -> "Özelleştir (Tema)"
+        AppLanguage.RU -> "Оформление (Тема)"
+        AppLanguage.AZ -> "Özəlləşdir (Tema)"
+        AppLanguage.EN -> "Customize (Theme)"
+    }
+
+    val backDesc = when (lang) {
+        AppLanguage.TR -> "Geri"
+        AppLanguage.RU -> "Назад"
+        AppLanguage.AZ -> "Geri"
+        AppLanguage.EN -> "Back"
+    }
+
+    val darkModeTitle = when (lang) {
+        AppLanguage.TR -> "Karanlık Mod"
+        AppLanguage.RU -> "Темная тема"
+        AppLanguage.AZ -> "Qaranlıq Rejim"
+        AppLanguage.EN -> "Dark Mode"
+    }
+
+    val darkModeSubtitle = if (settings.isDarkMode) {
+        when (lang) {
+            AppLanguage.TR -> "Koyu arka plan aktif"
+            AppLanguage.RU -> "Темный фон включен"
+            AppLanguage.AZ -> "Qaranlıq fon aktivdir"
+            AppLanguage.EN -> "Dark background enabled"
+        }
+    } else {
+        when (lang) {
+            AppLanguage.TR -> "Açık tema (Beyaz arkaplan) aktif"
+            AppLanguage.RU -> "Светлая тема (Белый фон) включена"
+            AppLanguage.AZ -> "Açıq tema (Ağ fon) aktivdir"
+            AppLanguage.EN -> "Light theme (White background) enabled"
+        }
+    }
+
+    val visualThemesTitle = when (lang) {
+        AppLanguage.TR -> "Görsel Temalar"
+        AppLanguage.RU -> "Визуальные темы"
+        AppLanguage.AZ -> "Vizual Temalar"
+        AppLanguage.EN -> "Visual Themes"
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = if (isTr) "Özelleştir (Tema)" else "Customize (Theme)",
+                        text = title,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -1195,7 +1400,7 @@ private fun CustomizeThemeSubScreen(
                         onClick = onBack,
                         modifier = Modifier.testTag("back_button_customize")
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = backDesc)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -1240,17 +1445,13 @@ private fun CustomizeThemeSubScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
-                                    text = if (isTr) "Karanlık Mod" else "Dark Mode",
+                                    text = darkModeTitle,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = if (settings.isDarkMode) {
-                                        if (isTr) "Koyu arka plan aktif" else "Dark background enabled"
-                                    } else {
-                                        if (isTr) "Açık tema (Beyaz arkaplan) aktif" else "Light theme (White background) enabled"
-                                    },
+                                    text = darkModeSubtitle,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -1271,7 +1472,7 @@ private fun CustomizeThemeSubScreen(
 
             item {
                 Text(
-                    text = if (isTr) "Görsel Temalar" else "Visual Themes",
+                    text = visualThemesTitle,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -1283,10 +1484,30 @@ private fun CustomizeThemeSubScreen(
                 val style = ThemeStyle.values()[index]
                 val isSelected = settings.themeStyle == style
                 val themeDescription = when (style) {
-                    ThemeStyle.CLASSIC -> if (isTr) "Klasik — Aydınlıkta Beyaz simge, Karanlıkta Koyu tema" else "Classic — White icon in Light, Dark in Dark mode"
-                    ThemeStyle.NEON_BLUE -> if (isTr) "Neon Mavi — Buton, saat ve kartlarda Mavi Neon parlama" else "Neon Blue — Electric Cyan Neon glow on cards & clocks"
-                    ThemeStyle.NEON_PURPLE -> if (isTr) "Neon Mor — Buton, saat ve kartlarda Mor Neon parlama" else "Neon Purple — Pinkish Purple Neon glow on cards & clocks"
-                    ThemeStyle.NEON_EMERALD -> if (isTr) "Neon Zümrüt — Parlak zümrüt yeşili neon vurgular ve parlamalı kartlar" else "Neon Emerald — Vibrant emerald green neon accents & glow"
+                    ThemeStyle.CLASSIC -> when (lang) {
+                        AppLanguage.TR -> "Klasik — Aydınlıkta Beyaz simge, Karanlıkta Koyu tema"
+                        AppLanguage.RU -> "Классический — Светлый значок на светлом фоне, темный на темном"
+                        AppLanguage.AZ -> "Klassik — İşıqlıda Ağ simvol, Qaranlıqda Tünd tema"
+                        AppLanguage.EN -> "Classic — White icon in Light, Dark in Dark mode"
+                    }
+                    ThemeStyle.NEON_BLUE -> when (lang) {
+                        AppLanguage.TR -> "Neon Mavi — Buton, saat ve kartlarda Mavi Neon parlama"
+                        AppLanguage.RU -> "Неон Синий — Электрическое неоновое свечение на карточках и часах"
+                        AppLanguage.AZ -> "Neon Mavi — Buton, saat və kartlarda Mavi Neon parlama"
+                        AppLanguage.EN -> "Neon Blue — Electric Cyan Neon glow on cards & clocks"
+                    }
+                    ThemeStyle.NEON_PURPLE -> when (lang) {
+                        AppLanguage.TR -> "Neon Mor — Buton, saat ve kartlarda Mor Neon parlama"
+                        AppLanguage.RU -> "Неон Фиолетовый — Розово-фиолетовое неоновое свечение на карточках и часах"
+                        AppLanguage.AZ -> "Neon Bənövşəyi — Buton, saat və kartlarda Bənövşəyi Neon parlama"
+                        AppLanguage.EN -> "Neon Purple — Pinkish Purple Neon glow on cards & clocks"
+                    }
+                    ThemeStyle.NEON_EMERALD -> when (lang) {
+                        AppLanguage.TR -> "Neon Zümrüt — Parlak zümrüt yeşili neon vurgular ve parlamalı kartlar"
+                        AppLanguage.RU -> "Неон Изумрудный — Ярко-зеленые изумрудные неоновые акценты и свечение"
+                        AppLanguage.AZ -> "Neon Zümrüd — Parlaq zümrüd yaşılı neon vurğular və parlamalar"
+                        AppLanguage.EN -> "Neon Emerald — Vibrant emerald green neon accents & glow"
+                    }
                 }
 
                 val accentColor = when (style) {
@@ -1358,14 +1579,35 @@ private fun LanguageSubScreen(
     onLanguageChanged: (AppLanguage) -> Unit,
     onBack: () -> Unit
 ) {
-    val isTr = settings.language == AppLanguage.TR
+    val lang = settings.language
+
+    val title = when (lang) {
+        AppLanguage.TR -> "Dil Seçimi"
+        AppLanguage.RU -> "Выбор языка"
+        AppLanguage.AZ -> "Dil Seçimi"
+        AppLanguage.EN -> "Language"
+    }
+
+    val backDesc = when (lang) {
+        AppLanguage.TR -> "Geri"
+        AppLanguage.RU -> "Назад"
+        AppLanguage.AZ -> "Geri"
+        AppLanguage.EN -> "Back"
+    }
+
+    val subtitle = when (lang) {
+        AppLanguage.TR -> "Uygulama arayüz dilini seçin:"
+        AppLanguage.RU -> "Выберите язык интерфейса приложения:"
+        AppLanguage.AZ -> "Tətbiqin interfeys dilini seçin:"
+        AppLanguage.EN -> "Select application interface language:"
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = if (isTr) "Dil Seçimi" else "Language",
+                        text = title,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -1375,7 +1617,7 @@ private fun LanguageSubScreen(
                         onClick = onBack,
                         modifier = Modifier.testTag("back_button_language")
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = backDesc)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -1394,19 +1636,19 @@ private fun LanguageSubScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Text(
-                text = if (isTr) "Uygulama arayüz dilini seçin:" else "Select application interface language:",
+                text = subtitle,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            AppLanguage.values().forEach { lang ->
-                val isSelected = settings.language == lang
+            AppLanguage.values().forEach { l ->
+                val isSelected = settings.language == l
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(14.dp))
-                        .clickable { onLanguageChanged(lang) }
-                        .testTag("lang_toggle_${lang.code}"),
+                        .clickable { onLanguageChanged(l) }
+                        .testTag("lang_toggle_${l.code}"),
                     shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
@@ -1418,7 +1660,7 @@ private fun LanguageSubScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = lang.displayName,
+                            text = l.displayName,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                             color = MaterialTheme.colorScheme.onSurface
@@ -1426,7 +1668,7 @@ private fun LanguageSubScreen(
                         if (isSelected) {
                             Icon(
                                 imageVector = Icons.Default.Check,
-                                contentDescription = "Seçili",
+                                contentDescription = "Selected",
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }

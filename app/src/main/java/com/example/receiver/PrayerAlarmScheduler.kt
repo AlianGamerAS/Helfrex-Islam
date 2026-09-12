@@ -28,7 +28,7 @@ object PrayerAlarmScheduler {
         val now = System.currentTimeMillis()
 
         // 1. Calculate TODAY's exact times
-        val todayCal = Calendar.getInstance(targetTz)
+        val todayCal = Calendar.getInstance()
         val todayData = FaziletPrayerCalculator.calculateDailyTimes(todayCal, lat, lng, city, district)
 
         // 2. Calculate TOMORROW's exact times (accounts for solar declination and daily minute shifts)

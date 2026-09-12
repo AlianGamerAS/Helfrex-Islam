@@ -366,6 +366,28 @@ class AzanPlayerService : Service() {
         const val EXTRA_PRAYER_NAME_EN = "extra_prayer_name_en"
         const val EXTRA_PRAYER_TIME = "extra_prayer_time"
 
+        fun startPlayback(
+            context: Context,
+            prayerNameTr: String,
+            prayerNameEn: String,
+            prayerTime: String
+        ) {
+            try {
+                val intent = Intent(context, AzanPlayerService::class.java).apply {
+                    putExtra(EXTRA_PRAYER_NAME_TR, prayerNameTr)
+                    putExtra(EXTRA_PRAYER_NAME_EN, prayerNameEn)
+                    putExtra(EXTRA_PRAYER_TIME, prayerTime)
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to startPlayback: ${e.message}")
+            }
+        }
+
         fun stopPlayback(context: Context) {
             try {
                 val intent = Intent(context, AzanPlayerService::class.java).apply {

@@ -185,11 +185,15 @@ object FaziletPrayerCalculator {
             return String.format(java.util.Locale.US, "%02d:%02d", h, m)
         }
 
+        val baseYear = baseCalendar.get(Calendar.YEAR)
+        val baseMonth = baseCalendar.get(Calendar.MONTH)
+        val baseDay = baseCalendar.get(Calendar.DAY_OF_MONTH)
+
         fun timeStrToMillis(totalMinutes: Int): Long {
-            val cal = Calendar.getInstance(targetTimeZone).apply {
-                set(Calendar.YEAR, year)
-                set(Calendar.MONTH, month - 1)
-                set(Calendar.DAY_OF_MONTH, day)
+            val cal = Calendar.getInstance().apply {
+                set(Calendar.YEAR, baseYear)
+                set(Calendar.MONTH, baseMonth)
+                set(Calendar.DAY_OF_MONTH, baseDay)
                 val normalized = (totalMinutes % 1440 + 1440) % 1440
                 set(Calendar.HOUR_OF_DAY, normalized / 60)
                 set(Calendar.MINUTE, normalized % 60)

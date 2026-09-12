@@ -15,6 +15,7 @@ import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import android.os.SystemClock
+import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -44,6 +45,7 @@ class PrayerForegroundService : Service() {
     private var powerManager: PowerManager? = null
     private var isScreenInteractive = true
     private var lastDayOfYear = -1
+    private var lastTriggeredPrayerKey = ""
 
     private val screenReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -137,6 +139,28 @@ class PrayerForegroundService : Service() {
 
         val enabledItems = enriched.items.filter { settings.selectedPrayers.contains(it.type.id) }.sortedBy { it.type.order }
         val activePrayerType = determineActivePrayerType(enabledItems, nextPrayer?.type)
+
+        // Live check: when device system clock matches the exact displayed prayer time, play Azan immediately!
+        val nowCal = Calendar.getInstance()
+        val nowHour = nowCal.get(Calendar.HOUR_OF_DAY)
+        val nowMin = nowCal.get(Calendar.MINUTE)
+        val currentClockTimeStr = String.format(java.util.Locale.US, "%02d:%02d", nowHour, nowMin)
+
+        for (item in enabledItems) {
+            if (item.timeStr == currentClockTimeStr) {
+                val triggerKey = "${nowCal.get(Calendar.DAY_OF_YEAR)}_${item.type.id}_$currentClockTimeStr"
+                if (lastTriggeredPrayerKey != triggerKey) {
+                    lastTriggeredPrayerKey = triggerKey
+                    Log.d("PrayerForegroundService", "Device clock ($currentClockTimeStr) matches ${item.type.nameTr}. Playing Azan!")
+                    AzanPlayerService.startPlayback(
+                        context = applicationContext,
+                        prayerNameTr = item.type.nameTr,
+                        prayerNameEn = item.type.nameEn,
+                        prayerTime = item.timeStr
+                    )
+                }
+            }
+        }
 
         val remoteViews = RemoteViews(packageName, R.layout.notification_prayer_bar)
 

@@ -134,8 +134,7 @@ class FaziletPrayerService(private val context: Context) {
         city: String,
         district: String
     ): PrayerTimesData {
-        val targetTz = FaziletPrayerCalculator.getTimeZoneForLocation(lat, lng, city, district)
-        val cal = Calendar.getInstance(targetTz)
+        val cal = Calendar.getInstance()
         val baseData = FaziletPrayerCalculator.calculateDailyTimes(cal, lat, lng, city, district)
         return enrichNextPrayer(baseData)
     }

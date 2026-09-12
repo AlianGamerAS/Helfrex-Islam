@@ -9,22 +9,28 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Repoyu Çek
+        uses: actions/checkout@v4
 
-      - name: Java 17 Kurulumu
+      - name: Java Kurulumu
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Gradlew Çalıştırma İzni Ver
-        run: chmod +x gradlew
+      - name: Flutter Kurulumu
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Bağımlılıkları Yükle
+        run: flutter pub get
 
       - name: APK Derle
-        run: ./gradlew assembleDebug
+        run: flutter build apk --release
 
-      - name: APK Dosyasını İndirilebilir Yap
+      - name: APK Dosyasını Yükle
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: app-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk

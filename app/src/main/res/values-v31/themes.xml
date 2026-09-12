@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base Application Theme for Android 12+ -->
+    <style name="Theme.MyApplication" parent="android:Theme.DeviceDefault.NoActionBar">
+        <item name="android:windowBackground">@color/splash_bg_classic_dark</item>
+        <item name="android:windowSplashScreenBackground">@color/splash_bg_classic_dark</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_classic_fg</item>
+        <item name="android:statusBarColor">@color/splash_bg_classic_dark</item>
+        <item name="android:navigationBarColor">@color/nav_bar_classic_dark</item>
+    </style>
+
+    <!-- Theme Styles for Dynamic Launcher Aliases & Splash Screens -->
+    <style name="Theme.App.ClassicDark" parent="Theme.MyApplication">
+        <item name="android:windowBackground">@color/splash_bg_classic_dark</item>
+        <item name="android:windowSplashScreenBackground">@color/splash_bg_classic_dark</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_classic_fg</item>
+        <item name="android:statusBarColor">@color/splash_bg_classic_dark</item>
+        <item name="android:navigationBarColor">@color/nav_bar_classic_dark</item>
+    </style>
+
+    <style name="Theme.App.ClassicLight" parent="Theme.MyApplication">
+        <item name="android:windowBackground">@color/splash_bg_classic_light</item>
+        <item name="android:windowSplashScreenBackground">@color/splash_bg_classic_light</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_classic_light_fg</item>
+        <item name="android:statusBarColor">@color/splash_bg_classic_light</item>
+        <item name="android:navigationBarColor">@color/nav_bar_classic_light</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+
+    <style name="Theme.App.NeonBlue" parent="Theme.MyApplication">
+        <item name="android:windowBackground">@color/splash_bg_neon_blue_dark</item>
+        <item name="android:windowSplashScreenBackground">@color/splash_bg_neon_blue_dark</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_neon_blue_fg</item>
+        <item name="android:statusBarColor">@color/splash_bg_neon_blue_dark</item>
+        <item name="android:navigationBarColor">@color/nav_bar_neon_blue_dark</item>
+    </style>
+
+    <style name="Theme.App.NeonBlueLight" parent="Theme.MyApplication">
+        <item name="android:windowBackground">@color/splash_bg_neon_blue_light</item>
+        <item name="android:windowSplashScreenBackground">@color/splash_bg_neon_blue_light</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_neon_blue_light_fg</item>
+        <item name="android:statusBarColor">@color/splash_bg_neon_blue_light</item>
+        <item name="android:navigationBarColor">@color/nav_bar_neon_blue_light</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+
+    <style name="Theme.App.NeonPurple" parent="Theme.MyApplication">
+        <item name="android:windowBackground">@color/splash_bg_neon_purple_dark</item>
+        <item name="android:windowSplashScreenBackground">@color/splash_bg_neon_purple_dark</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_neon_purple_fg</item>
+        <item name="android:statusBarColor">@color/splash_bg_neon_purple_dark</item>
+        <item name="android:navigationBarColor">@color/nav_bar_neon_purple_dark</item>
+    </style>
+
+    <style name="Theme.App.NeonPurpleLight" parent="Theme.MyApplication">
+        <item name="android:windowBackground">@color/splash_bg_neon_purple_light</item>
+        <item name="android:windowSplashScreenBackground">@color/splash_bg_neon_purple_light</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_neon_purple_light_fg</item>
+        <item name="android:statusBarColor">@color/splash_bg_neon_purple_light</item>
+        <item name="android:navigationBarColor">@color/nav_bar_neon_purple_light</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+
+    <style name="Theme.App.NeonEmerald" parent="Theme.MyApplication">
+        <item name="android:windowBackground">@color/splash_bg_neon_emerald_dark</item>
+        <item name="android:windowSplashScreenBackground">@color/splash_bg_neon_emerald_dark</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_neon_emerald_fg</item>
+        <item name="android:statusBarColor">@color/splash_bg_neon_emerald_dark</item>
+        <item name="android:navigationBarColor">@color/nav_bar_neon_emerald_dark</item>
+    </style>
+
+    <style name="Theme.App.NeonEmeraldLight" parent="Theme.MyApplication">
+        <item name="android:windowBackground">@color/splash_bg_neon_emerald_light</item>
+        <item name="android:windowSplashScreenBackground">@color/splash_bg_neon_emerald_light</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_neon_emerald_light_fg</item>
+        <item name="android:statusBarColor">@color/splash_bg_neon_emerald_light</item>
+        <item name="android:navigationBarColor">@color/nav_bar_neon_emerald_light</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+
+</resources>

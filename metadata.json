@@ -1,0 +1,6 @@
+{
+  "name": "Helfrex İslam",
+  "description": "Fazilet Takvimi temkinli vakitleri, kütüphane PDF okuyucu, ezan alarmı ve arka plan bildirim servisi ile İslami rehber uygulaması.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

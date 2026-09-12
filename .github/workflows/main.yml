@@ -12,25 +12,20 @@ jobs:
       - name: Repoyu Çek
         uses: actions/checkout@v4
 
-      - name: Java Kurulumu
+      - name: Java 17 Kurulumu
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Flutter Kurulumu
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-
-      - name: Bağımlılıkları Yükle
-        run: flutter pub get
+      - name: Gradle Kurulumu
+        uses: gradle/actions/setup-gradle@v3
 
       - name: APK Derle
-        run: flutter build apk --release
+        run: gradle assembleDebug
 
       - name: APK Dosyasını Yükle
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: app-debug-apk
+          path: app/build/outputs/apk/debug/*.apk

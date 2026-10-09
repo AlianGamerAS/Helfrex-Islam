@@ -96,12 +96,19 @@ fun HomeScreen(
             .sortedBy { it.type.order }
     }
 
-    // Determine the next upcoming prayer from the filtered list
+    // Determine the next upcoming prayer for the countdown hero card
     val nextItem = remember(filteredItems, currentTimeMillis) {
         filteredItems.firstOrNull { it.targetTimeMillis > currentTimeMillis }
             ?: filteredItems.firstOrNull()?.let {
                 it.copy(targetTimeMillis = it.targetTimeMillis + 24 * 60 * 60 * 1000L)
             }
+    }
+
+    // Determine the CURRENT (active / ongoing) prayer:
+    // The prayer we are currently in right now (targetTimeMillis <= currentTimeMillis).
+    val activeItem = remember(filteredItems, currentTimeMillis) {
+        filteredItems.lastOrNull { it.targetTimeMillis <= currentTimeMillis }
+            ?: filteredItems.lastOrNull()
     }
 
     val remainingMillis = remember(nextItem, currentTimeMillis) {
@@ -199,10 +206,10 @@ fun HomeScreen(
 
             // List of selected prayer times
             items(filteredItems, key = { it.type.id }) { item ->
-                val isCurrentNext = nextItem?.type == item.type
+                val isCurrentActive = activeItem?.type == item.type
                 PrayerTimeCard(
                     item = item,
-                    isNext = isCurrentNext,
+                    isActive = isCurrentActive,
                     themeStyle = themeStyle,
                     language = userLang
                 )
@@ -325,26 +332,26 @@ private fun HeaderCard(
 @Composable
 private fun PrayerTimeCard(
     item: PrayerTimeItem,
-    isNext: Boolean,
+    isActive: Boolean,
     themeStyle: ThemeStyle,
     language: AppLanguage
 ) {
     val prayerIcon = getPrayerIcon(item.type)
     val prayerName = item.type.getName(language)
 
-    val cardColor = if (isNext) {
+    val cardColor = if (isActive) {
         MaterialTheme.colorScheme.primaryContainer
     } else {
         MaterialTheme.colorScheme.surface
     }
 
-    val textColor = if (isNext) {
+    val textColor = if (isActive) {
         MaterialTheme.colorScheme.onPrimaryContainer
     } else {
         MaterialTheme.colorScheme.onSurface
     }
 
-    val iconColor = if (isNext) {
+    val iconColor = if (isActive) {
         MaterialTheme.colorScheme.primary
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant
@@ -354,13 +361,13 @@ private fun PrayerTimeCard(
         modifier = Modifier
             .fillMaxWidth()
             .then(
-                if (isNext) Modifier.neonGlow(themeStyle, cornerRadius = 14.dp)
+                if (isActive) Modifier.neonGlow(themeStyle, cornerRadius = 14.dp)
                 else Modifier
             )
             .testTag("prayer_card_${item.type.id}"),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = cardColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isNext) 4.dp else 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isActive) 4.dp else 1.dp)
     ) {
         Row(
             modifier = Modifier
@@ -374,7 +381,7 @@ private fun PrayerTimeCard(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(iconColor.copy(alpha = if (isNext) 0.2f else 0.1f)),
+                        .background(iconColor.copy(alpha = if (isActive) 0.2f else 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -385,28 +392,12 @@ private fun PrayerTimeCard(
                     )
                 }
                 Spacer(modifier = Modifier.width(14.dp))
-                Column {
-                    Text(
-                        text = prayerName,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = if (isNext) FontWeight.Bold else FontWeight.Medium,
-                        color = textColor
-                    )
-                    if (isNext) {
-                        val upcomingLabel = when (language) {
-                            AppLanguage.TR -> "Sıradaki Vakit"
-                            AppLanguage.RU -> "Следующий намаз"
-                            AppLanguage.AZ -> "Növbəti Vaxt"
-                            AppLanguage.EN -> "Upcoming Prayer"
-                        }
-                        Text(
-                            text = upcomingLabel,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
+                Text(
+                    text = prayerName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
+                    color = textColor
+                )
             }
 
             Text(
@@ -515,7 +506,9 @@ private fun getPrayerIcon(type: PrayerType): ImageVector {
         PrayerType.GUNES -> Icons.Default.Brightness7
         PrayerType.OGLE -> Icons.Default.WbSunny
         PrayerType.IKINDI -> Icons.Default.Brightness5
+        PrayerType.GUN_BATIMI -> Icons.Default.Brightness5
         PrayerType.AKSAM -> Icons.Default.Brightness6
         PrayerType.YATSI -> Icons.Default.Nightlight
+        PrayerType.GECE_YARISI -> Icons.Default.NightsStay
     }
 }

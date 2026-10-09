@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -87,7 +88,7 @@ fun LibraryScreen(
     val userLang = settings.language
     val themeStyle = settings.themeStyle
 
-    var activePdfBook by remember { mutableStateOf<BookItem?>(null) }
+    var activePdfBookId by rememberSaveable { mutableStateOf<String?>(null) }
 
     val books = remember {
         listOf(
@@ -139,15 +140,17 @@ fun LibraryScreen(
         )
     }
 
+    val activePdfBook = books.find { it.id == activePdfBookId }
+
     if (activePdfBook != null) {
-        val book = activePdfBook!!
+        val book = activePdfBook
         PdfViewerScreen(
             url = book.remoteUrl,
             fileName = book.fileName,
             assetFallback = book.assetFallback,
             bookTitle = book.getTitle(userLang),
             isDarkTheme = settings.isDarkMode,
-            onClose = { activePdfBook = null }
+            onClose = { activePdfBookId = null }
         )
     } else {
         Column(
@@ -210,7 +213,7 @@ fun LibraryScreen(
                         book = book,
                         themeStyle = themeStyle,
                         language = userLang,
-                        onOpenBook = { activePdfBook = book }
+                        onOpenBook = { activePdfBookId = book.id }
                     )
                 }
             }

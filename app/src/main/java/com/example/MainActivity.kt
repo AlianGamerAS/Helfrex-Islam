@@ -42,6 +42,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -65,15 +66,7 @@ class MainActivity : ComponentActivity() {
 
     private val requestPermissionsLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-        val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
-
-        if (fineLocationGranted || coarseLocationGranted) {
-            // Location permission granted, refresh GPS coordinates
-            lifecycleScopeLaunchLocation()
-        }
-
+    ) {
         // Reschedule alarms with exact time
         PrayerAlarmScheduler.scheduleAllAlarms(this)
     }
@@ -85,7 +78,7 @@ class MainActivity : ComponentActivity() {
         prefsManager = PreferencesManager.getInstance(this)
         prayerService = FaziletPrayerService.getInstance(this)
 
-        // Request all critical permissions on startup as required
+        // Request notification permissions on startup (No location permission asked)
         requestAppPermissions()
 
         // Start ongoing foreground service
@@ -99,7 +92,7 @@ class MainActivity : ComponentActivity() {
             val prayerData by prayerService.prayerDataFlow.collectAsState()
             val coroutineScope = rememberCoroutineScope()
 
-            var selectedTab by remember { mutableIntStateOf(0) }
+            var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
             val view = androidx.compose.ui.platform.LocalView.current
             if (!view.isInEditMode) {
@@ -171,11 +164,18 @@ class MainActivity : ComponentActivity() {
                                 PrayerAlarmScheduler.scheduleAllAlarms(this@MainActivity)
                                 PrayerForegroundService.startService(this@MainActivity)
                             },
+                            onShowSpecialPrayersInNotificationChanged = { show ->
+                                prefsManager.setShowSpecialPrayersInNotification(show)
+                                PrayerForegroundService.startService(this@MainActivity)
+                            },
                             onSoundChanged = { sound ->
                                 prefsManager.setAzanSound(sound)
                             },
                             onDurationChanged = { duration ->
                                 prefsManager.setAzanDuration(duration)
+                            },
+                            onSpecialPrayersSoundChanged = { sound ->
+                                prefsManager.setSpecialPrayersSound(sound)
                             },
                             onDarkModeChanged = { isDark ->
                                 prefsManager.setDarkMode(isDark)
@@ -194,11 +194,6 @@ class MainActivity : ComponentActivity() {
                                     prayerService.applyManualLocation(country, city, lat, lng)
                                     PrayerAlarmScheduler.scheduleAllAlarms(this@MainActivity)
                                     PrayerForegroundService.startService(this@MainActivity)
-                                }
-                            },
-                            onAutoGpsRequested = {
-                                coroutineScope.launch {
-                                    prayerService.applyAutomaticGpsLocation()
                                 }
                             },
                             modifier = Modifier.padding(innerPadding)
@@ -223,17 +218,6 @@ class MainActivity : ComponentActivity() {
 
     private fun requestAppPermissions() {
         val permissionsToRequest = mutableListOf<String>()
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            permissionsToRequest.add(Manifest.permission.ACCESS_FINE_LOCATION)
-        }
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            permissionsToRequest.add(Manifest.permission.ACCESS_COARSE_LOCATION)
-        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
@@ -260,13 +244,6 @@ class MainActivity : ComponentActivity() {
                     e.printStackTrace()
                 }
             }
-        }
-    }
-
-    private fun lifecycleScopeLaunchLocation() {
-        // Asynchronously request GPS position
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
-            prayerService.requestCurrentLocationAndRefresh()
         }
     }
 }

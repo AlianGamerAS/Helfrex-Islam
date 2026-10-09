@@ -50,9 +50,25 @@ class AzanPlayerService : Service() {
             return START_NOT_STICKY
         }
 
+        val prayerId = intent?.getStringExtra(EXTRA_PRAYER_ID) ?: ""
         val prayerNameTr = intent?.getStringExtra(EXTRA_PRAYER_NAME_TR) ?: "Namaz"
         val prayerNameEn = intent?.getStringExtra(EXTRA_PRAYER_NAME_EN) ?: "Prayer"
         val prayerTime = intent?.getStringExtra(EXTRA_PRAYER_TIME) ?: ""
+
+        // Anti-duplicate protection: prevent interrupted or repeated playback
+        val triggerKey = "${java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_YEAR)}_$prayerId"
+        val now = System.currentTimeMillis()
+        if (isPlaybackActive) {
+            Log.d(TAG, "Playback is already running. Ignoring duplicate start for $prayerId.")
+            return START_NOT_STICKY
+        }
+        if (prayerId.isNotEmpty() && lastPlayedPrayerKey == triggerKey && now - lastPlayedTimestamp < 90_000L) {
+            Log.d(TAG, "Prayer $prayerId already triggered recently. Ignoring duplicate.")
+            return START_NOT_STICKY
+        }
+        lastPlayedPrayerKey = triggerKey
+        lastPlayedTimestamp = now
+        isPlaybackActive = true
 
         val prefsManager = PreferencesManager.getInstance(this)
         val settings = prefsManager.loadSettings()
@@ -66,7 +82,14 @@ class AzanPlayerService : Service() {
         // Acquire WakeLock so device stays awake during alarm playback
         acquireWakeLock()
 
-        playAzanSound(settings.azanSound, settings.azanDuration)
+        val prayerType = com.example.model.PrayerType.values().find { it.id == prayerId }
+        val soundToPlay = if (prayerType?.isSpecialPrayer() == true) {
+            settings.specialPrayersSound
+        } else {
+            settings.azanSound
+        }
+
+        playAzanSound(soundToPlay, settings.azanDuration)
 
         return START_NOT_STICKY
     }
@@ -248,6 +271,7 @@ class AzanPlayerService : Service() {
 
     private fun scheduleSelfStop(delayMillis: Long) {
         stopRunnable?.let { mainHandler.removeCallbacks(it) }
+        autoStopJob?.cancel()
         val r = Runnable {
             Log.d(TAG, "Safety stop triggered after ${delayMillis}ms")
             stopPlaybackInternal()
@@ -256,15 +280,6 @@ class AzanPlayerService : Service() {
         }
         stopRunnable = r
         mainHandler.postDelayed(r, delayMillis)
-
-        autoStopJob?.cancel()
-        autoStopJob = serviceScope.launch {
-            delay(delayMillis)
-            Log.d(TAG, "Coroutine safety stop after ${delayMillis}ms")
-            stopPlaybackInternal()
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf()
-        }
     }
 
     private fun stopPlaybackInternal() {
@@ -285,6 +300,7 @@ class AzanPlayerService : Service() {
         } catch (e: Exception) {
             Log.e(TAG, "Error releasing mediaPlayer", e)
         }
+        isPlaybackActive = false
         releaseWakeLock()
     }
 
@@ -362,18 +378,30 @@ class AzanPlayerService : Service() {
         const val NOTIFICATION_ID = 2001
 
         const val ACTION_STOP_AZAN = "com.example.ACTION_STOP_AZAN"
+        const val EXTRA_PRAYER_ID = "extra_prayer_id"
         const val EXTRA_PRAYER_NAME_TR = "extra_prayer_name_tr"
         const val EXTRA_PRAYER_NAME_EN = "extra_prayer_name_en"
         const val EXTRA_PRAYER_TIME = "extra_prayer_time"
+
+        @Volatile
+        var isPlaybackActive: Boolean = false
+
+        @Volatile
+        var lastPlayedPrayerKey: String? = null
+
+        @Volatile
+        var lastPlayedTimestamp: Long = 0L
 
         fun startPlayback(
             context: Context,
             prayerNameTr: String,
             prayerNameEn: String,
-            prayerTime: String
+            prayerTime: String,
+            prayerId: String = ""
         ) {
             try {
                 val intent = Intent(context, AzanPlayerService::class.java).apply {
+                    putExtra(EXTRA_PRAYER_ID, prayerId)
                     putExtra(EXTRA_PRAYER_NAME_TR, prayerNameTr)
                     putExtra(EXTRA_PRAYER_NAME_EN, prayerNameEn)
                     putExtra(EXTRA_PRAYER_TIME, prayerTime)

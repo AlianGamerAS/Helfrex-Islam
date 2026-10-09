@@ -13,14 +13,21 @@ enum class PrayerType(
     GUNES("gunes", "Güneş", "Sunrise", "Восход", "Günəş", 3),
     OGLE("ogle", "Öğle", "Dhuhr", "Зухр", "Zöhr", 4),
     IKINDI("ikindi", "İkindi", "Asr", "Аср", "Əsr", 5),
-    AKSAM("aksam", "Akşam", "Maghrib", "Магриб", "Məğrib", 6),
-    YATSI("yatsi", "Yatsı", "Isha", "Иша", "İşa", 7);
+    GUN_BATIMI("gun_batimi", "Gün Batımı", "Sunset", "Заход солнца", "Gün Batımı", 6),
+    AKSAM("aksam", "Akşam", "Maghrib", "Магриб", "Məğrib", 7),
+    YATSI("yatsi", "Yatsı", "Isha", "Иша", "İşa", 8),
+    GECE_YARISI("gece_yarisi", "Gece Yarısı", "Midnight", "Полночь", "Gecə Yarısı", 9);
 
     fun getName(lang: AppLanguage): String = when (lang) {
         AppLanguage.TR -> nameTr
         AppLanguage.EN -> nameEn
         AppLanguage.RU -> nameRu
         AppLanguage.AZ -> nameAz
+    }
+
+    fun isSpecialPrayer(): Boolean = when (this) {
+        IMSAK, GUNES, GUN_BATIMI, GECE_YARISI -> true
+        else -> false
     }
 }
 
@@ -111,8 +118,10 @@ enum class AppLanguage(
 
 data class UserSettings(
     val selectedPrayers: Set<String> = PrayerType.values().map { it.id }.toSet(),
+    val showSpecialPrayersInNotification: Boolean = false,
     val azanSound: AzanSound = AzanSound.AZAN,
     val azanDuration: AzanDuration = AzanDuration.LONG,
+    val specialPrayersSound: AzanSound = AzanSound.SILENT,
     val isDarkMode: Boolean = true,
     val themeStyle: ThemeStyle = ThemeStyle.CLASSIC,
     val language: AppLanguage = AppLanguage.TR

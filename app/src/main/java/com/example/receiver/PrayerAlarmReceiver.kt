@@ -29,6 +29,7 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
 
         // Start Azan Player Service
         val serviceIntent = Intent(context, AzanPlayerService::class.java).apply {
+            putExtra(AzanPlayerService.EXTRA_PRAYER_ID, prayerId)
             putExtra(AzanPlayerService.EXTRA_PRAYER_NAME_TR, prayerNameTr)
             putExtra(AzanPlayerService.EXTRA_PRAYER_NAME_EN, prayerNameEn)
             putExtra(AzanPlayerService.EXTRA_PRAYER_TIME, prayerTime)

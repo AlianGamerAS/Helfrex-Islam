@@ -81,6 +81,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -123,17 +124,18 @@ enum class SettingsSubScreen {
 fun SettingsScreen(
     settings: UserSettings,
     onPrayerToggled: (String, Boolean) -> Unit,
+    onShowSpecialPrayersInNotificationChanged: (Boolean) -> Unit = {},
     onSoundChanged: (AzanSound) -> Unit,
     onDurationChanged: (AzanDuration) -> Unit,
+    onSpecialPrayersSoundChanged: (AzanSound) -> Unit = {},
     onDarkModeChanged: (Boolean) -> Unit,
     onThemeStyleChanged: (ThemeStyle) -> Unit,
     onLanguageChanged: (AppLanguage) -> Unit,
     onManualLocationSaved: (country: String, city: String, lat: Double, lng: Double) -> Unit = { _, _, _, _ -> },
-    onAutoGpsRequested: () -> Unit = {},
     onCloseSettings: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var activeSubScreen by remember { mutableStateOf(SettingsSubScreen.MAIN) }
+    var activeSubScreen by rememberSaveable { mutableStateOf(SettingsSubScreen.MAIN) }
 
     BackHandler(enabled = activeSubScreen != SettingsSubScreen.MAIN) {
         activeSubScreen = SettingsSubScreen.MAIN
@@ -164,6 +166,7 @@ fun SettingsScreen(
                 PrayerTimesSubScreen(
                     settings = settings,
                     onPrayerToggled = onPrayerToggled,
+                    onShowSpecialPrayersInNotificationChanged = onShowSpecialPrayersInNotificationChanged,
                     onBack = { activeSubScreen = SettingsSubScreen.MAIN }
                 )
             }
@@ -172,7 +175,6 @@ fun SettingsScreen(
                 LocationManagementSubScreen(
                     settings = settings,
                     onSaveManualLocation = onManualLocationSaved,
-                    onAutoGps = onAutoGpsRequested,
                     onBack = { activeSubScreen = SettingsSubScreen.MAIN }
                 )
             }
@@ -182,6 +184,7 @@ fun SettingsScreen(
                     settings = settings,
                     onSoundChanged = onSoundChanged,
                     onDurationChanged = onDurationChanged,
+                    onSpecialPrayersSoundChanged = onSpecialPrayersSoundChanged,
                     onBack = { activeSubScreen = SettingsSubScreen.MAIN }
                 )
             }
@@ -255,10 +258,10 @@ private fun SettingsMainMenu(
         AppLanguage.EN -> "Location & City Management"
     }
     val catLocSub = when (userLang) {
-        AppLanguage.TR -> "İnternetsiz ülke/şehir seçimi veya otomatik GPS"
-        AppLanguage.RU -> "Выбор страны/города офлайн или авто-GPS"
-        AppLanguage.AZ -> "İnternetsiz ölkə/şəhər seçimi və ya avtomatik GPS"
-        AppLanguage.EN -> "Offline country/city selection or automatic GPS"
+        AppLanguage.TR -> "İnternetsiz ülke ve şehir seçimi"
+        AppLanguage.RU -> "Выбор страны и города офлайн"
+        AppLanguage.AZ -> "İnternetsiz ölkə və şəhər seçimi"
+        AppLanguage.EN -> "Offline country and city selection"
     }
 
     val catAzanTitle = when (userLang) {
@@ -491,6 +494,7 @@ private fun SettingsCategoryCard(
 private fun PrayerTimesSubScreen(
     settings: UserSettings,
     onPrayerToggled: (String, Boolean) -> Unit,
+    onShowSpecialPrayersInNotificationChanged: (Boolean) -> Unit,
     onBack: () -> Unit
 ) {
     val lang = settings.language
@@ -514,6 +518,20 @@ private fun PrayerTimesSubScreen(
         AppLanguage.RU -> "Назад"
         AppLanguage.AZ -> "Geri"
         AppLanguage.EN -> "Back"
+    }
+
+    val specialNotifTitle = when (lang) {
+        AppLanguage.TR -> "Bildirim panelinde eklenti vakitleri göster"
+        AppLanguage.RU -> "Показывать дополнительные времена в панели уведомлений"
+        AppLanguage.AZ -> "Bildiriş panelində əlavə vaxtları göstər"
+        AppLanguage.EN -> "Show extra times in notification panel"
+    }
+
+    val specialNotifDesc = when (lang) {
+        AppLanguage.TR -> "İmsak, Güneş, Gün Batımı ve Gece Yarısı vakitlerini bildirim çubuğunda göster"
+        AppLanguage.RU -> "Отображать Имсак, Восход, Заход и Полночь в шторке уведомлений"
+        AppLanguage.AZ -> "İmsak, Günəş, Gün Batımı və Gecə Yarısı vaxtlarını bildiriş zolağında göstər"
+        AppLanguage.EN -> "Display Imsak, Sunrise, Sunset, and Midnight on notification bar"
     }
 
     Scaffold(
@@ -593,17 +611,67 @@ private fun PrayerTimesSubScreen(
                     }
                 }
             }
+
+            // Bottom toggle card: Bildirim panelinde eklenti vakitleri göster
+            item {
+                Spacer(modifier = Modifier.height(10.dp))
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .clickable {
+                            onShowSpecialPrayersInNotificationChanged(!settings.showSpecialPrayersInNotification)
+                        }
+                        .testTag("toggle_special_notif_card"),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                            Text(
+                                text = specialNotifTitle,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = specialNotifDesc,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = settings.showSpecialPrayersInNotification,
+                            onCheckedChange = { onShowSpecialPrayersInNotificationChanged(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.colorScheme.primary,
+                                checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+                            ),
+                            modifier = Modifier.testTag("switch_special_notif")
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
     }
 }
 
-// 2. Alt Sayfa: Konum ve Şehir Yönetimi (Manuel / Otomatik)
+// 2. Alt Sayfa: Konum ve Şehir Yönetimi (Manuel)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LocationManagementSubScreen(
     settings: UserSettings,
     onSaveManualLocation: (country: String, city: String, lat: Double, lng: Double) -> Unit,
-    onAutoGps: () -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -624,31 +692,20 @@ private fun LocationManagementSubScreen(
         AppLanguage.EN -> "Back"
     }
 
-    val isManual = prefsManager.isManualLocation()
     val currentCountry = prefsManager.getManualCountry()
     val (currentCity, currentDistrict) = prefsManager.getLastCityAndDistrict()
 
     val currentModeLabel = when (lang) {
-        AppLanguage.TR -> "Mevcut Konum Modu:"
-        AppLanguage.RU -> "Текущий режим местоположения:"
-        AppLanguage.AZ -> "Mövcud Məkan Rejimi:"
-        AppLanguage.EN -> "Current Location Mode:"
+        AppLanguage.TR -> "Mevcut Konum:"
+        AppLanguage.RU -> "Текущее местоположение:"
+        AppLanguage.AZ -> "Mövcud Məkan:"
+        AppLanguage.EN -> "Current Location:"
     }
 
-    val currentModeValue = if (isManual) {
-        when (lang) {
-            AppLanguage.TR -> "Manuel Seçim ($currentCity, $currentCountry)"
-            AppLanguage.RU -> "Ручной выбор ($currentCity, $currentCountry)"
-            AppLanguage.AZ -> "Manual Seçim ($currentCity, $currentCountry)"
-            AppLanguage.EN -> "Manual Selection ($currentCity, $currentCountry)"
-        }
+    val currentModeValue = if (currentCountry.isNotEmpty()) {
+        "$currentCity, $currentCountry"
     } else {
-        when (lang) {
-            AppLanguage.TR -> "Otomatik GPS ($currentCity)"
-            AppLanguage.RU -> "Автоматический GPS ($currentCity)"
-            AppLanguage.AZ -> "Avtomatik GPS ($currentCity)"
-            AppLanguage.EN -> "Automatic GPS ($currentCity)"
-        }
+        currentCity
     }
 
     val manualSectionTitle = when (lang) {
@@ -684,13 +741,6 @@ private fun LocationManagementSubScreen(
         AppLanguage.RU -> "Сохранить"
         AppLanguage.AZ -> "Yadda Saxla"
         AppLanguage.EN -> "Save"
-    }
-
-    val autoGpsText = when (lang) {
-        AppLanguage.TR -> "Konumu Otomatik Ayarla"
-        AppLanguage.RU -> "Определить местоположение автоматически"
-        AppLanguage.AZ -> "Məkanı Avtomatik Təyin Et"
-        AppLanguage.EN -> "Set Location Automatically"
     }
 
     val countries = CityDatabase.countries
@@ -764,7 +814,7 @@ private fun LocationManagementSubScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = if (isManual) Icons.Default.LocationCity else Icons.Default.MyLocation,
+                                imageVector = Icons.Default.LocationCity,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary
                             )
@@ -920,40 +970,6 @@ private fun LocationManagementSubScreen(
                     )
                 }
             }
-
-            // Auto-set Location Button (Directly underneath Save button)
-            item {
-                Button(
-                    onClick = {
-                        onAutoGps()
-                        val autoMsg = when (lang) {
-                            AppLanguage.TR -> "Otomatik GPS konumuna geçildi."
-                            AppLanguage.RU -> "Включено автоматическое определение GPS."
-                            AppLanguage.AZ -> "Avtomatik GPS məkanına keçildi."
-                            AppLanguage.EN -> "Switched to automatic GPS location."
-                        }
-                        Toast.makeText(context, autoMsg, Toast.LENGTH_SHORT).show()
-                        onBack()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                        .testTag("auto_gps_location_button"),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                ) {
-                    Icon(imageVector = Icons.Default.MyLocation, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = autoGpsText,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-            }
         }
     }
 }
@@ -965,6 +981,7 @@ private fun AzanSoundSubScreen(
     settings: UserSettings,
     onSoundChanged: (AzanSound) -> Unit,
     onDurationChanged: (AzanDuration) -> Unit,
+    onSpecialPrayersSoundChanged: (AzanSound) -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -1324,6 +1341,88 @@ private fun AzanSoundSubScreen(
                         text = testButtonLabel,
                         fontWeight = FontWeight.Bold
                     )
+                }
+            }
+
+            item {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                val specialSectionTitle = when (lang) {
+                    AppLanguage.TR -> "İmsak, Güneş, Gün Batımı & Gece Yarısı:"
+                    AppLanguage.RU -> "Имсак, восход, заход солнца и полночь:"
+                    AppLanguage.AZ -> "İmsak, Günəş, Gün Batımı və Gecə Yarısı:"
+                    AppLanguage.EN -> "Imsak, Sunrise, Sunset & Midnight:"
+                }
+                val specialSectionDesc = when (lang) {
+                    AppLanguage.TR -> "Bu 4 vakit girdiğinde yapılacak işlem:"
+                    AppLanguage.RU -> "Действие при наступлении этих 4 времен:"
+                    AppLanguage.AZ -> "Bu 4 vaxt daxil olduqda ediləcək əməliyyat:"
+                    AppLanguage.EN -> "Action when these 4 times arrive:"
+                }
+                Text(
+                    text = specialSectionTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = specialSectionDesc,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            items(AzanSound.values().size) { index ->
+                val sound = AzanSound.values()[index]
+                val isSelected = settings.specialPrayersSound == sound
+                val soundTitle = when (sound) {
+                    AzanSound.SILENT -> when (lang) {
+                        AppLanguage.TR -> "Sadece Bildirim Gönder"
+                        AppLanguage.RU -> "Только уведомление"
+                        AppLanguage.AZ -> "Yalnız Bildiriş Göndər"
+                        AppLanguage.EN -> "Send Notification Only"
+                    }
+                    AzanSound.RINGTONE -> when (lang) {
+                        AppLanguage.TR -> "Zil Sesi Çal"
+                        AppLanguage.RU -> "Мелодия звонка"
+                        AppLanguage.AZ -> "Zəng Səsi Çal"
+                        AppLanguage.EN -> "Play Ringtone"
+                    }
+                    AzanSound.AZAN -> when (lang) {
+                        AppLanguage.TR -> "Ezan Oku"
+                        AppLanguage.RU -> "Читать азан"
+                        AppLanguage.AZ -> "Azan Oxu"
+                        AppLanguage.EN -> "Play Azan"
+                    }
+                }
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .clickable { onSpecialPrayersSoundChanged(sound) }
+                        .testTag("special_sound_row_${sound.id}"),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = soundTitle,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        RadioButton(
+                            selected = isSelected,
+                            onClick = { onSpecialPrayersSoundChanged(sound) },
+                            colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary),
+                            modifier = Modifier.testTag("special_sound_radio_${sound.id}")
+                        )
+                    }
                 }
             }
         }

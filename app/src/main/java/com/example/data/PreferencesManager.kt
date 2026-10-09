@@ -23,20 +23,29 @@ class PreferencesManager(private val context: Context) {
     fun loadSettings(): UserSettings {
         val defaultPrayers = PrayerType.values().map { it.id }.toSet()
         val prayers = prefs.getStringSet(KEY_SELECTED_PRAYERS, defaultPrayers) ?: defaultPrayers
+        val showSpecialNotif = prefs.getBoolean(KEY_SHOW_SPECIAL_NOTIF, false)
         val soundId = prefs.getString(KEY_AZAN_SOUND, AzanSound.AZAN.id) ?: AzanSound.AZAN.id
         val durationId = prefs.getString(KEY_AZAN_DURATION, AzanDuration.LONG.id) ?: AzanDuration.LONG.id
+        val specialSoundId = prefs.getString(KEY_SPECIAL_PRAYERS_SOUND, AzanSound.SILENT.id) ?: AzanSound.SILENT.id
         val isDark = prefs.getBoolean(KEY_IS_DARK, true)
         val styleId = prefs.getString(KEY_THEME_STYLE, ThemeStyle.CLASSIC.id) ?: ThemeStyle.CLASSIC.id
         val langCode = prefs.getString(KEY_LANG, AppLanguage.TR.code) ?: AppLanguage.TR.code
 
         return UserSettings(
             selectedPrayers = prayers,
+            showSpecialPrayersInNotification = showSpecialNotif,
             azanSound = AzanSound.values().firstOrNull { it.id == soundId } ?: AzanSound.AZAN,
             azanDuration = AzanDuration.values().firstOrNull { it.id == durationId } ?: AzanDuration.LONG,
+            specialPrayersSound = AzanSound.values().firstOrNull { it.id == specialSoundId } ?: AzanSound.SILENT,
             isDarkMode = isDark,
             themeStyle = ThemeStyle.values().firstOrNull { it.id == styleId } ?: ThemeStyle.CLASSIC,
             language = AppLanguage.values().firstOrNull { it.code == langCode } ?: AppLanguage.TR
         )
+    }
+
+    fun setShowSpecialPrayersInNotification(show: Boolean) {
+        prefs.edit().putBoolean(KEY_SHOW_SPECIAL_NOTIF, show).apply()
+        _settingsFlow.value = _settingsFlow.value.copy(showSpecialPrayersInNotification = show)
     }
 
     fun updateSelectedPrayer(prayerId: String, isSelected: Boolean) {
@@ -61,6 +70,11 @@ class PreferencesManager(private val context: Context) {
     fun setAzanDuration(duration: AzanDuration) {
         prefs.edit().putString(KEY_AZAN_DURATION, duration.id).apply()
         _settingsFlow.value = _settingsFlow.value.copy(azanDuration = duration)
+    }
+
+    fun setSpecialPrayersSound(sound: AzanSound) {
+        prefs.edit().putString(KEY_SPECIAL_PRAYERS_SOUND, sound.id).apply()
+        _settingsFlow.value = _settingsFlow.value.copy(specialPrayersSound = sound)
     }
 
     fun setDarkMode(isDark: Boolean) {
@@ -140,8 +154,10 @@ class PreferencesManager(private val context: Context) {
     companion object {
         private const val PREF_NAME = "helfrex_islam_prefs"
         private const val KEY_SELECTED_PRAYERS = "pref_selected_prayers"
+        private const val KEY_SHOW_SPECIAL_NOTIF = "pref_show_special_notif"
         private const val KEY_AZAN_SOUND = "pref_azan_sound"
         private const val KEY_AZAN_DURATION = "pref_azan_duration"
+        private const val KEY_SPECIAL_PRAYERS_SOUND = "pref_special_prayers_sound"
         private const val KEY_IS_DARK = "pref_is_dark"
         private const val KEY_THEME_STYLE = "pref_theme_style"
         private const val KEY_LANG = "pref_lang"

@@ -138,7 +138,11 @@ class PrayerForegroundService : Service() {
         }
 
         val enabledItems = enriched.items.filter { settings.selectedPrayers.contains(it.type.id) }.sortedBy { it.type.order }
-        val activePrayerType = determineActivePrayerType(enabledItems, nextPrayer?.type)
+        // All active prayer determination based on system time
+        val nowMillis = System.currentTimeMillis()
+        val currentActivePrayerItem = enabledItems.lastOrNull { it.targetTimeMillis <= nowMillis }
+            ?: enabledItems.lastOrNull()
+        val activePrayerType = currentActivePrayerItem?.type
 
         // Live check: when device system clock matches the exact displayed prayer time, play Azan immediately!
         val nowCal = Calendar.getInstance()
@@ -156,7 +160,8 @@ class PrayerForegroundService : Service() {
                         context = applicationContext,
                         prayerNameTr = item.type.nameTr,
                         prayerNameEn = item.type.nameEn,
-                        prayerTime = item.timeStr
+                        prayerTime = item.timeStr,
+                        prayerId = item.type.id
                     )
                 }
             }
@@ -168,6 +173,7 @@ class PrayerForegroundService : Service() {
             remoteViews = remoteViews,
             settings = settings,
             nextName = nextName,
+            currentActiveName = currentActivePrayerItem?.type?.getName(settings.language) ?: "",
             countdownStr = formattedCountdown,
             items = enriched.items,
             activeType = activePrayerType,
@@ -213,6 +219,7 @@ class PrayerForegroundService : Service() {
         remoteViews: RemoteViews,
         settings: com.example.model.UserSettings,
         nextName: String,
+        currentActiveName: String,
         countdownStr: String,
         items: List<PrayerTimeItem>,
         activeType: PrayerType?,
@@ -220,6 +227,7 @@ class PrayerForegroundService : Service() {
     ) {
         val isDark = settings.isDarkMode
         val themeStyle = settings.themeStyle
+        val showDetails = settings.showSpecialPrayersInNotification
 
         // 1. Root & Inner container backgrounds
         remoteViews.setInt(
@@ -233,17 +241,34 @@ class PrayerForegroundService : Service() {
             if (isDark) R.drawable.bg_notif_inner_dark else R.drawable.bg_notif_inner_light
         )
         remoteViews.setInt(
+            R.id.notif_special_strip,
+            "setBackgroundResource",
+            if (isDark) R.drawable.bg_notif_inner_dark else R.drawable.bg_notif_inner_light
+        )
+        remoteViews.setInt(
             R.id.notif_countdown_container,
             "setBackgroundResource",
             if (isDark) R.drawable.bg_countdown_pill_dark else R.drawable.bg_countdown_pill_light
         )
 
-        // 2. Title without location, formatting as "[Prayer] Vaktine:"
-        val titleText = when (settings.language) {
-            AppLanguage.TR -> "$nextName Vaktine:"
-            AppLanguage.AZ -> "$nextName Vaxtına:"
-            AppLanguage.RU -> "До времени $nextName:"
-            AppLanguage.EN -> "$nextName Time:"
+        // 2. Title & Countdown bar:
+        // When showDetails is false (kapalıyken): Yanlız panelsiz şimdi ne vaktiyse adı yazsın (örn: "İkindi Vakti", "Öğle Vakti")
+        // When showDetails is true (açıkken): Sıradaki vakit adı yazıp vakte ne kadar kaldı geri sayımı
+        val titleText = if (!showDetails) {
+            val activeNameDisplay = if (currentActiveName.isNotEmpty()) currentActiveName else nextName
+            when (settings.language) {
+                AppLanguage.TR -> "$activeNameDisplay Vakti"
+                AppLanguage.AZ -> "$activeNameDisplay Vaxtı"
+                AppLanguage.RU -> "Время $activeNameDisplay"
+                AppLanguage.EN -> "$activeNameDisplay Time"
+            }
+        } else {
+            when (settings.language) {
+                AppLanguage.TR -> "$nextName Vaktine:"
+                AppLanguage.AZ -> "$nextName Vaxtına:"
+                AppLanguage.RU -> "До времени $nextName:"
+                AppLanguage.EN -> "$nextName Time:"
+            }
         }
         remoteViews.setTextViewText(R.id.notif_title_text, titleText)
         remoteViews.setTextColor(
@@ -280,18 +305,26 @@ class PrayerForegroundService : Service() {
         val inactiveNameColor = if (isDark) Color.parseColor("#94A3B8") else Color.parseColor("#64748B")
         val inactiveTimeColor = if (isDark) Color.WHITE else Color.parseColor("#0F172A")
 
-        // Map Prayer items to Box View IDs
-        val prayerViewMappings = listOf(
-            Triple(PrayerType.IMSAK, R.id.notif_box_imsak, Pair(R.id.notif_name_imsak, R.id.notif_time_imsak)),
+        // First strip (notif_inner_strip) ALWAYS holds the 5 main prayers: Sabah, Öğle, İkindi, Akşam, Yatsı
+        // Second strip (notif_special_strip) holds the 4 special prayers: İmsak, Güneş, Gün Batımı, Gece Yarısı
+        remoteViews.setViewVisibility(
+            R.id.notif_special_strip,
+            if (showDetails) View.VISIBLE else View.GONE
+        )
+
+        val allPrayerMappings = listOf(
             Triple(PrayerType.SABAH, R.id.notif_box_sabah, Pair(R.id.notif_name_sabah, R.id.notif_time_sabah)),
-            Triple(PrayerType.GUNES, R.id.notif_box_gunes, Pair(R.id.notif_name_gunes, R.id.notif_time_gunes)),
             Triple(PrayerType.OGLE, R.id.notif_box_ogle, Pair(R.id.notif_name_ogle, R.id.notif_time_ogle)),
             Triple(PrayerType.IKINDI, R.id.notif_box_ikindi, Pair(R.id.notif_name_ikindi, R.id.notif_time_ikindi)),
             Triple(PrayerType.AKSAM, R.id.notif_box_aksam, Pair(R.id.notif_name_aksam, R.id.notif_time_aksam)),
-            Triple(PrayerType.YATSI, R.id.notif_box_yatsi, Pair(R.id.notif_name_yatsi, R.id.notif_time_yatsi))
+            Triple(PrayerType.YATSI, R.id.notif_box_yatsi, Pair(R.id.notif_name_yatsi, R.id.notif_time_yatsi)),
+            Triple(PrayerType.IMSAK, R.id.notif_box_imsak, Pair(R.id.notif_name_imsak, R.id.notif_time_imsak)),
+            Triple(PrayerType.GUNES, R.id.notif_box_gunes, Pair(R.id.notif_name_gunes, R.id.notif_time_gunes)),
+            Triple(PrayerType.GUN_BATIMI, R.id.notif_box_gun_batimi, Pair(R.id.notif_name_gun_batimi, R.id.notif_time_gun_batimi)),
+            Triple(PrayerType.GECE_YARISI, R.id.notif_box_gece_yarisi, Pair(R.id.notif_name_gece_yarisi, R.id.notif_time_gece_yarisi))
         )
 
-        for ((type, boxId, textIds) in prayerViewMappings) {
+        for ((type, boxId, textIds) in allPrayerMappings) {
             val isSelected = settings.selectedPrayers.contains(type.id)
             if (!isSelected) {
                 remoteViews.setViewVisibility(boxId, View.GONE)
@@ -299,7 +332,19 @@ class PrayerForegroundService : Service() {
                 remoteViews.setViewVisibility(boxId, View.VISIBLE)
                 val item = items.find { it.type == type }
                 val timeStr = item?.timeStr ?: "--:--"
-                val nameStr = if (isTr) type.nameTr else type.nameEn
+                val nameStr = if (isTr) {
+                    when (type) {
+                        PrayerType.GUN_BATIMI -> "G.Batımı"
+                        PrayerType.GECE_YARISI -> "G.Yarısı"
+                        else -> type.nameTr
+                    }
+                } else {
+                    when (type) {
+                        PrayerType.GUN_BATIMI -> "Sunset"
+                        PrayerType.GECE_YARISI -> "Midnt"
+                        else -> type.nameEn
+                    }
+                }
 
                 remoteViews.setTextViewText(textIds.first, nameStr)
                 remoteViews.setTextViewText(textIds.second, timeStr)

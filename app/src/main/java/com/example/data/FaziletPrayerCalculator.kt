@@ -175,8 +175,14 @@ object FaziletPrayerCalculator {
         val sabahMinutes = imsakMinutes + 20
         val ogleMinutes = Math.round(rawOgle * 60.0).toInt() + TEMKIN_OGLE_MIN
         val ikindiMinutes = Math.round(rawIkindi * 60.0).toInt() + TEMKIN_IKINDI_MIN
-        val aksamMinutes = Math.round(rawAksam * 60.0).toInt() + TEMKIN_AKSAM_MIN
+        // Gün Batımı (Astronomical Sunset / Gurûb)
+        val gunBatimiMinutes = Math.round(rawAksam * 60.0).toInt()
+        val aksamMinutes = gunBatimiMinutes + TEMKIN_AKSAM_MIN
         val yatsiMinutes = Math.round(rawYatsi * 60.0).toInt() + TEMKIN_YATSI_MIN
+
+        // Gece Yarısı (Islamic Midnight / Nısf-ı Leyl - Midpoint between Sunset and next morning's Imsak)
+        val nightDuration = (imsakMinutes + 1440) - aksamMinutes
+        val geceYarisiMinutes = (aksamMinutes + nightDuration / 2) % 1440
 
         fun minutesToTimeStr(totalMinutes: Int): String {
             val normalized = (totalMinutes % 1440 + 1440) % 1440
@@ -189,11 +195,14 @@ object FaziletPrayerCalculator {
         val baseMonth = baseCalendar.get(Calendar.MONTH)
         val baseDay = baseCalendar.get(Calendar.DAY_OF_MONTH)
 
-        fun timeStrToMillis(totalMinutes: Int): Long {
+        fun timeStrToMillis(totalMinutes: Int, isNextDay: Boolean = false): Long {
             val cal = Calendar.getInstance().apply {
                 set(Calendar.YEAR, baseYear)
                 set(Calendar.MONTH, baseMonth)
                 set(Calendar.DAY_OF_MONTH, baseDay)
+                if (isNextDay) {
+                    add(Calendar.DAY_OF_MONTH, 1)
+                }
                 val normalized = (totalMinutes % 1440 + 1440) % 1440
                 set(Calendar.HOUR_OF_DAY, normalized / 60)
                 set(Calendar.MINUTE, normalized % 60)
@@ -203,14 +212,18 @@ object FaziletPrayerCalculator {
             return cal.timeInMillis
         }
 
+        val isMidnightNextDay = geceYarisiMinutes < aksamMinutes
+
         val items = listOf(
             PrayerTimeItem(PrayerType.IMSAK, minutesToTimeStr(imsakMinutes), timeStrToMillis(imsakMinutes)),
             PrayerTimeItem(PrayerType.SABAH, minutesToTimeStr(sabahMinutes), timeStrToMillis(sabahMinutes)),
             PrayerTimeItem(PrayerType.GUNES, minutesToTimeStr(gunesMinutes), timeStrToMillis(gunesMinutes)),
             PrayerTimeItem(PrayerType.OGLE, minutesToTimeStr(ogleMinutes), timeStrToMillis(ogleMinutes)),
             PrayerTimeItem(PrayerType.IKINDI, minutesToTimeStr(ikindiMinutes), timeStrToMillis(ikindiMinutes)),
+            PrayerTimeItem(PrayerType.GUN_BATIMI, minutesToTimeStr(gunBatimiMinutes), timeStrToMillis(gunBatimiMinutes)),
             PrayerTimeItem(PrayerType.AKSAM, minutesToTimeStr(aksamMinutes), timeStrToMillis(aksamMinutes)),
-            PrayerTimeItem(PrayerType.YATSI, minutesToTimeStr(yatsiMinutes), timeStrToMillis(yatsiMinutes))
+            PrayerTimeItem(PrayerType.YATSI, minutesToTimeStr(yatsiMinutes), timeStrToMillis(yatsiMinutes)),
+            PrayerTimeItem(PrayerType.GECE_YARISI, minutesToTimeStr(geceYarisiMinutes), timeStrToMillis(geceYarisiMinutes, isMidnightNextDay))
         )
 
         val gregorianDateStr = String.format(java.util.Locale.US, "%02d.%02d.%04d", day, month, year)

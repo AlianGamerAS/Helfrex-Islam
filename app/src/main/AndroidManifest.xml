@@ -4,9 +4,6 @@
     <!-- Critical Permissions requested as per user prompt -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
@@ -40,6 +37,7 @@
             android:roundIcon="@mipmap/ic_launcher_classic"
             android:label="@string/app_name"
             android:launchMode="singleTop"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize"
             android:theme="@style/Theme.MyApplication" />
 
         <!-- Dynamic Launcher Icon Aliases for Theme & Dark/Light modes (Exactly 1 is enabled) -->

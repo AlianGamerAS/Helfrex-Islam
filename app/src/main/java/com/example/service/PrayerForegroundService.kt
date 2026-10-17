@@ -167,20 +167,34 @@ class PrayerForegroundService : Service() {
             }
         }
 
-        val remoteViews = RemoteViews(packageName, R.layout.notification_prayer_bar)
+        val collapsedViews = RemoteViews(packageName, R.layout.notification_prayer_bar)
+        val expandedViews = RemoteViews(packageName, R.layout.notification_prayer_bar_expanded)
 
         applyThemeToRemoteViews(
-            remoteViews = remoteViews,
+            remoteViews = collapsedViews,
             settings = settings,
             nextName = nextName,
             currentActiveName = currentActivePrayerItem?.type?.getName(settings.language) ?: "",
             countdownStr = formattedCountdown,
             items = enriched.items,
             activeType = activePrayerType,
-            isTr = isTr
+            isTr = isTr,
+            isExpanded = false
         )
 
-        val notification = buildOngoingNotification(remoteViews)
+        applyThemeToRemoteViews(
+            remoteViews = expandedViews,
+            settings = settings,
+            nextName = nextName,
+            currentActiveName = currentActivePrayerItem?.type?.getName(settings.language) ?: "",
+            countdownStr = formattedCountdown,
+            items = enriched.items,
+            activeType = activePrayerType,
+            isTr = isTr,
+            isExpanded = true
+        )
+
+        val notification = buildOngoingNotification(collapsedViews, expandedViews, settings.showSpecialPrayersInNotification)
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
 
@@ -223,7 +237,8 @@ class PrayerForegroundService : Service() {
         countdownStr: String,
         items: List<PrayerTimeItem>,
         activeType: PrayerType?,
-        isTr: Boolean
+        isTr: Boolean,
+        isExpanded: Boolean
     ) {
         val isDark = settings.isDarkMode
         val themeStyle = settings.themeStyle
@@ -240,11 +255,17 @@ class PrayerForegroundService : Service() {
             "setBackgroundResource",
             if (isDark) R.drawable.bg_notif_inner_dark else R.drawable.bg_notif_inner_light
         )
-        remoteViews.setInt(
-            R.id.notif_special_strip,
-            "setBackgroundResource",
-            if (isDark) R.drawable.bg_notif_inner_dark else R.drawable.bg_notif_inner_light
-        )
+        if (isExpanded) {
+            remoteViews.setInt(
+                R.id.notif_special_strip,
+                "setBackgroundResource",
+                if (isDark) R.drawable.bg_notif_inner_dark else R.drawable.bg_notif_inner_light
+            )
+            remoteViews.setViewVisibility(
+                R.id.notif_special_strip,
+                if (showDetails) View.VISIBLE else View.GONE
+            )
+        }
         remoteViews.setInt(
             R.id.notif_countdown_container,
             "setBackgroundResource",
@@ -252,9 +273,7 @@ class PrayerForegroundService : Service() {
         )
 
         // 2. Title & Countdown bar:
-        // When showDetails is false (kapalıyken): Yanlız panelsiz şimdi ne vaktiyse adı yazsın (örn: "İkindi Vakti", "Öğle Vakti")
-        // When showDetails is true (açıkken): Sıradaki vakit adı yazıp vakte ne kadar kaldı geri sayımı
-        val titleText = if (!showDetails) {
+        val titleText = if (!isExpanded || !showDetails) {
             val activeNameDisplay = if (currentActiveName.isNotEmpty()) currentActiveName else nextName
             when (settings.language) {
                 AppLanguage.TR -> "$activeNameDisplay Vakti"
@@ -305,26 +324,29 @@ class PrayerForegroundService : Service() {
         val inactiveNameColor = if (isDark) Color.parseColor("#94A3B8") else Color.parseColor("#64748B")
         val inactiveTimeColor = if (isDark) Color.WHITE else Color.parseColor("#0F172A")
 
-        // First strip (notif_inner_strip) ALWAYS holds the 5 main prayers: Sabah, Öğle, İkindi, Akşam, Yatsı
-        // Second strip (notif_special_strip) holds the 4 special prayers: İmsak, Güneş, Gün Batımı, Gece Yarısı
-        remoteViews.setViewVisibility(
-            R.id.notif_special_strip,
-            if (showDetails) View.VISIBLE else View.GONE
-        )
+        val prayerMappings = if (!isExpanded) {
+            listOf(
+                Triple(PrayerType.SABAH, R.id.notif_box_sabah, Pair(R.id.notif_name_sabah, R.id.notif_time_sabah)),
+                Triple(PrayerType.OGLE, R.id.notif_box_ogle, Pair(R.id.notif_name_ogle, R.id.notif_time_ogle)),
+                Triple(PrayerType.IKINDI, R.id.notif_box_ikindi, Pair(R.id.notif_name_ikindi, R.id.notif_time_ikindi)),
+                Triple(PrayerType.AKSAM, R.id.notif_box_aksam, Pair(R.id.notif_name_aksam, R.id.notif_time_aksam)),
+                Triple(PrayerType.YATSI, R.id.notif_box_yatsi, Pair(R.id.notif_name_yatsi, R.id.notif_time_yatsi))
+            )
+        } else {
+            listOf(
+                Triple(PrayerType.SABAH, R.id.notif_box_sabah, Pair(R.id.notif_name_sabah, R.id.notif_time_sabah)),
+                Triple(PrayerType.OGLE, R.id.notif_box_ogle, Pair(R.id.notif_name_ogle, R.id.notif_time_ogle)),
+                Triple(PrayerType.IKINDI, R.id.notif_box_ikindi, Pair(R.id.notif_name_ikindi, R.id.notif_time_ikindi)),
+                Triple(PrayerType.AKSAM, R.id.notif_box_aksam, Pair(R.id.notif_name_aksam, R.id.notif_time_aksam)),
+                Triple(PrayerType.YATSI, R.id.notif_box_yatsi, Pair(R.id.notif_name_yatsi, R.id.notif_time_yatsi)),
+                Triple(PrayerType.IMSAK, R.id.notif_box_imsak, Pair(R.id.notif_name_imsak, R.id.notif_time_imsak)),
+                Triple(PrayerType.GUNES, R.id.notif_box_gunes, Pair(R.id.notif_name_gunes, R.id.notif_time_gunes)),
+                Triple(PrayerType.GUN_BATIMI, R.id.notif_box_gun_batimi, Pair(R.id.notif_name_gun_batimi, R.id.notif_time_gun_batimi)),
+                Triple(PrayerType.GECE_YARISI, R.id.notif_box_gece_yarisi, Pair(R.id.notif_name_gece_yarisi, R.id.notif_time_gece_yarisi))
+            )
+        }
 
-        val allPrayerMappings = listOf(
-            Triple(PrayerType.SABAH, R.id.notif_box_sabah, Pair(R.id.notif_name_sabah, R.id.notif_time_sabah)),
-            Triple(PrayerType.OGLE, R.id.notif_box_ogle, Pair(R.id.notif_name_ogle, R.id.notif_time_ogle)),
-            Triple(PrayerType.IKINDI, R.id.notif_box_ikindi, Pair(R.id.notif_name_ikindi, R.id.notif_time_ikindi)),
-            Triple(PrayerType.AKSAM, R.id.notif_box_aksam, Pair(R.id.notif_name_aksam, R.id.notif_time_aksam)),
-            Triple(PrayerType.YATSI, R.id.notif_box_yatsi, Pair(R.id.notif_name_yatsi, R.id.notif_time_yatsi)),
-            Triple(PrayerType.IMSAK, R.id.notif_box_imsak, Pair(R.id.notif_name_imsak, R.id.notif_time_imsak)),
-            Triple(PrayerType.GUNES, R.id.notif_box_gunes, Pair(R.id.notif_name_gunes, R.id.notif_time_gunes)),
-            Triple(PrayerType.GUN_BATIMI, R.id.notif_box_gun_batimi, Pair(R.id.notif_name_gun_batimi, R.id.notif_time_gun_batimi)),
-            Triple(PrayerType.GECE_YARISI, R.id.notif_box_gece_yarisi, Pair(R.id.notif_name_gece_yarisi, R.id.notif_time_gece_yarisi))
-        )
-
-        for ((type, boxId, textIds) in allPrayerMappings) {
+        for ((type, boxId, textIds) in prayerMappings) {
             val isSelected = settings.selectedPrayers.contains(type.id)
             if (!isSelected) {
                 remoteViews.setViewVisibility(boxId, View.GONE)
@@ -363,7 +385,7 @@ class PrayerForegroundService : Service() {
         }
     }
 
-    private fun buildOngoingNotification(remoteViews: RemoteViews): Notification {
+    private fun buildOngoingNotification(collapsedViews: RemoteViews, expandedViews: RemoteViews, showDetails: Boolean): Notification {
         val openIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
@@ -382,7 +404,6 @@ class PrayerForegroundService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Determine system & app dark mode: icon must be WHITE in dark mode, BLACK in light mode - NEVER yellow!
         val isSystemNight = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
         val prefs = PreferencesManager.getInstance(this).loadSettings()
         val isDark = isSystemNight || prefs.isDarkMode
@@ -392,9 +413,9 @@ class PrayerForegroundService : Service() {
             .setSmallIcon(R.drawable.ic_notification_logo)
             .setColor(iconColor)
             .setColorized(false)
-            .setCustomContentView(remoteViews)
-            .setCustomBigContentView(remoteViews)
-            .setCustomHeadsUpContentView(remoteViews)
+            .setCustomContentView(collapsedViews)
+            .setCustomBigContentView(if (showDetails) expandedViews else collapsedViews)
+            .setCustomHeadsUpContentView(collapsedViews)
             .setOngoing(true)
             .setAutoCancel(false)
             .setOnlyAlertOnce(true)
@@ -406,10 +427,13 @@ class PrayerForegroundService : Service() {
     }
 
     private fun buildInitialNotification(): Notification {
-        val initialRemoteViews = RemoteViews(packageName, R.layout.notification_prayer_bar)
-        initialRemoteViews.setTextViewText(R.id.notif_title_text, "Vakitler yükleniyor...")
-        initialRemoteViews.setTextViewText(R.id.notif_countdown_text, "--:--:--")
-        return buildOngoingNotification(initialRemoteViews)
+        val initialCollapsed = RemoteViews(packageName, R.layout.notification_prayer_bar)
+        initialCollapsed.setTextViewText(R.id.notif_title_text, "Vakitler yükleniyor...")
+        initialCollapsed.setTextViewText(R.id.notif_countdown_text, "--:--:--")
+        val initialExpanded = RemoteViews(packageName, R.layout.notification_prayer_bar_expanded)
+        initialExpanded.setTextViewText(R.id.notif_title_text, "Vakitler yükleniyor...")
+        initialExpanded.setTextViewText(R.id.notif_countdown_text, "--:--:--")
+        return buildOngoingNotification(initialCollapsed, initialExpanded, true)
     }
 
     private fun createNotificationChannel() {

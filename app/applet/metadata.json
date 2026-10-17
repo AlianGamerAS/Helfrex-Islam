@@ -1,0 +1,6 @@
+{
+  "name": "İslam Rehberi",
+  "description": "İslam Rehberi ile namaz vakitleri, kütüphane PDF okuyucu, ezan alarmı ve arka plan bildirim servisi. Yapımcı: Helfrex Studio",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

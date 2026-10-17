@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.LocationCity
@@ -232,10 +233,10 @@ private fun SettingsMainMenu(
         AppLanguage.EN -> "Settings"
     }
     val subtitleSettings = when (userLang) {
-        AppLanguage.TR -> "Helfrex İslam Tercihleri ve Özellikleri"
-        AppLanguage.RU -> "Настройки и функции приложения"
-        AppLanguage.AZ -> "Tətbiq Tənzimləmələri və Xüsusiyyətləri"
-        AppLanguage.EN -> "Helfrex Islam Preferences & Tools"
+        AppLanguage.TR -> "İslam Rehberi Tercihleri • Yapımcı: Helfrex Studio"
+        AppLanguage.RU -> "Настройки İslam Rehberi • Разработчик: Helfrex Studio"
+        AppLanguage.AZ -> "İslam Rehberi Tənzimləmələri • İstehsalçı: Helfrex Studio"
+        AppLanguage.EN -> "İslam Rehberi Preferences • Maker: Helfrex Studio"
     }
 
     val catPrayerTitle = when (userLang) {
@@ -413,6 +414,23 @@ private fun SettingsMainMenu(
                     themeStyle = themeStyle,
                     tag = "cat_language",
                     onClick = { onNavigate(SettingsSubScreen.LANGUAGE) }
+                )
+            }
+
+            item {
+                val aboutTitle = when (userLang) {
+                    AppLanguage.TR -> "Yapımcı / Geliştirici"
+                    AppLanguage.RU -> "Разработчик"
+                    AppLanguage.AZ -> "İstehsalçı"
+                    AppLanguage.EN -> "Developer"
+                }
+                SettingsCategoryCard(
+                    title = aboutTitle,
+                    subtitle = "Helfrex Studio",
+                    icon = Icons.Default.Info,
+                    themeStyle = themeStyle,
+                    tag = "cat_about",
+                    onClick = {}
                 )
             }
         }
